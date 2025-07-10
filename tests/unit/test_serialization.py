@@ -192,7 +192,7 @@ class TestSerialization:
         assert ast2.source_file == "/path/to/test.idl"
 
     def test_position_information_excluded(self) -> None:
-        """Test that line/column information is excluded from JSON."""
+        """Test that line/column information is included in JSON."""
         idl = """
         namespace Test {
             interface IUser {
@@ -205,14 +205,16 @@ class TestSerialization:
         # Convert to dict
         data = ast_to_dict(ast)
 
-        # Check that position info is not in JSON
-        assert "line" not in data
-        assert "column" not in data
+        # Check that position info is included in JSON
+        # Top-level has no position
+        assert data.get("line") is None
+        assert data.get("column") is None
 
-        # Check nested objects too
+        # Check nested objects have position
         ns_data = data["namespaces"][0]
-        assert "line" not in ns_data
-        assert "column" not in ns_data
+        assert "line" in ns_data
+        assert "column" in ns_data
+        assert ns_data["line"] == 2
 
     def test_load_nonexistent_file(self) -> None:
         """Test loading from non-existent file."""

@@ -1,22 +1,47 @@
 [project]
 name = "minimidl"
 version = "0.1.0"
-description = "Modern Interface Notation INterpreter for Multi-language Implementation Definition Language"
+description = "Modern Interface Definition Language compiler for C++, C, and Swift"
 readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "MIT" }
 authors = [
-    { name = "MinimIDL Contributors" }
+    { name = "MinimIDL Contributors", email = "minimidl@example.com" }
 ]
-keywords = ["idl", "code-generation", "c++", "swift", "interface", "bindings"]
+maintainers = [
+    { name = "MinimIDL Team", email = "minimidl@example.com" }
+]
+keywords = [
+    "idl",
+    "interface-definition-language", 
+    "code-generation",
+    "code-generator",
+    "c++",
+    "cpp",
+    "swift", 
+    "c-wrapper",
+    "bindings",
+    "api",
+    "compiler",
+    "cross-platform",
+    "interop",
+    "ffi"
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: C++",
     "Topic :: Software Development :: Code Generators",
     "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Build Tools",
+    "Typing :: Typed",
+    "Environment :: Console",
 ]
 dependencies = [
     "lark>=1.1.9",
@@ -29,9 +54,11 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/yourusername/minimidl"
-Repository = "https://github.com/yourusername/minimidl"
+Repository = "https://github.com/yourusername/minimidl.git"
 Documentation = "https://minimidl.readthedocs.io"
-Issues = "https://github.com/yourusername/minimidl/issues"
+"Bug Tracker" = "https://github.com/yourusername/minimidl/issues"
+"Release Notes" = "https://github.com/yourusername/minimidl/releases"
+"Source Code" = "https://github.com/yourusername/minimidl"
 
 [project.scripts]
 minimidl = "minimidl.cli:main"
@@ -45,8 +72,37 @@ dev = [
     "mypy>=1.14.1",
     "pytest>=8.3.5",
     "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-benchmark>=5.1.0",
+    "pytest-xdist>=3.6.1",
+    "coverage[toml]>=7.6.0",
+    "coverage-badge>=1.1.2",
+    "pip-audit>=2.8.0",
+    "bandit>=1.8.0",
+    "pre-commit>=4.0.1",
+    "watchdog>=6.0.0",
+]
+docs = [
+    "mkdocs>=1.6.1",
     "mkdocs-material>=9.5.50",
     "mkdocstrings[python]>=0.27.0",
+    "mkdocs-include-markdown-plugin>=7.0.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.3.0",
+    "mkdocs-minify-plugin>=0.8.0",
+    "pymdown-extensions>=10.12",
+    "pdoc>=15.0.0",
+]
+test = [
+    "pytest>=8.3.5",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-benchmark>=5.1.0",
+    "pytest-xdist>=3.6.1",
+    "hypothesis>=6.122.0",
+    "faker>=33.0.0",
+]
+all = [
+    "minimidl[dev,docs,test]",
 ]
 
 [build-system]
@@ -55,6 +111,39 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["minimidl"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "minimidl/**/*.py",
+    "minimidl/**/*.lark",
+    "minimidl/generators/templates/**/*.jinja2",
+    "tests/**/*.py",
+    "tests/**/*.idl",
+    "examples/**/*",
+    "docs/**/*",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "justfile",
+    "mkdocs.yml",
+    "pyproject.toml",
+]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    "**/*.pyo",
+    "build/",
+    "dist/",
+    "*.egg-info/",
+    ".coverage",
+    "htmlcov/",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".ruff_cache/",
+    "site/",
+    "tmp*/",
+    ".venv/",
+]
 
 [tool.black]
 line-length = 88
@@ -106,13 +195,58 @@ no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 show_error_codes = true
+namespace_packages = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "lark.*",
+    "loguru.*",
+]
+ignore_missing_imports = true
+
+[tool.pylint.messages_control]
+disable = [
+    "C0114",  # missing-module-docstring
+    "C0115",  # missing-class-docstring
+    "C0116",  # missing-function-docstring
+    "R0903",  # too-few-public-methods
+    "R0913",  # too-many-arguments
+    "W0212",  # protected-access
+]
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
+skips = ["B101"]  # assert_used
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-ra -q --strict-markers"
+addopts = "-ra -q --strict-markers --strict-config --showlocals --tb=short"
+markers = [
+    "slow: marks tests as slow (deselect with '-m not slow')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "benchmark: marks tests as benchmarks",
+]
+norecursedirs = [
+    "build",
+    "dist",
+    "*.egg",
+    ".tox",
+    ".venv",
+    "tmp*",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
 
 [tool.coverage.run]
 source = ["minimidl"]
@@ -122,8 +256,17 @@ branch = true
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
+    "def __str__",
     "if __name__ == .__main__.:",
     "raise AssertionError",
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+    "class .*\\(Protocol\\):",
+    "pass",
 ]
+show_missing = true
+precision = 2
+fail_under = 87

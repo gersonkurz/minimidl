@@ -19,7 +19,23 @@
       "Bash(./.venv/bin/pytest tests/integration/test_swift_generation.py -v)",
       "Bash(./.venv/bin/minimidl:*)",
       "Bash(ls:*)",
-      "Bash(uv run:*)"
+      "Bash(uv run:*)",
+      "Bash(mkdir:*)",
+      "Bash(.venv/bin/pytest tests/unit/test_ast.py::TestASTTransformation::test_constant_transformation -v --tb=long)",
+      "Bash(.venv/bin/pytest tests/unit/test_ast.py::TestASTTransformation::test_complex_expressions -v --tb=short)",
+      "Bash(.venv/bin/pytest tests/unit/test_ast.py::TestASTNodeValidation::test_constant_type_validation -v --tb=short)",
+      "Bash(.venv/bin/pytest tests/unit/test_serialization.py -v --tb=short)",
+      "Bash(.venv/bin/pytest tests/unit/test_cli.py tests/unit/test_workflows.py -v --cov=minimidl --cov-report=term-missing --tb=short)",
+      "Bash(.venv/bin/pytest tests/unit/ -v --cov=minimidl --cov-report=term-missing --tb=short -x)",
+      "Bash(.venv/bin/pytest tests/unit/ --cov=minimidl --cov-report=term --cov-report=html -q)",
+      "Bash(.venv/bin/pytest tests/unit/test_coverage_boost.py tests/unit/test_parser.py tests/unit/test_validation.py tests/unit/test_cpp_generator.py tests/unit/test_c_wrapper_generator.py tests/unit/test_swift_generator.py -v --cov=minimidl --cov-report=term)",
+      "Bash(.venv/bin/pytest tests/unit/ -v --cov=minimidl --cov-report=term)",
+      "Bash(.venv/bin/pytest tests/unit/ --cov=minimidl --cov-report=term-missing:skip-covered)",
+      "Bash(.venv/bin/pytest tests/unit/test_final_coverage.py tests/unit/test_ast.py tests/unit/test_parser.py tests/unit/test_validation.py tests/unit/test_cpp_generator.py tests/unit/test_c_wrapper_generator.py tests/unit/test_swift_generator.py tests/unit/test_cli.py tests/unit/test_workflows.py --cov=minimidl --cov-report=term-missing:skip-covered -q)",
+      "Bash(.venv/bin/pytest tests/unit/ --cov=minimidl -q)",
+      "Bash(.venv/bin/pytest tests/unit/test_parser.py tests/unit/test_validation.py tests/unit/test_cli.py --cov=minimidl --cov-report=term)",
+      "Bash(.venv/bin/pytest tests/ --cov=minimidl --tb=no)",
+      "Bash(.venv/bin/pytest tests/ --cov=minimidl -q)"
     ],
     "deny": []
   }

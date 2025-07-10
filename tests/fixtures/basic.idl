@@ -1,0 +1,9 @@
+// Basic MinimIDL test fixture
+namespace Basic {
+    // Simple interface with basic methods
+    interface IGreeter {
+        string_t GetGreeting();
+        void SetName(string_t name);
+        int32_t GetCount();
+    }
+}

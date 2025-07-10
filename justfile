@@ -80,3 +80,118 @@ release VERSION:
     git push origin v{{VERSION}}
     uv build
     @echo "Ready to upload to PyPI with: uv publish"
+
+# Generate C++ example project
+example-cpp:
+    python -m minimidl generate examples/task-manager/task_manager.idl --target cpp --output ./tmp/cpp-example
+    @echo "C++ example generated in ./tmp/cpp-example"
+
+# Generate Swift example project
+example-swift:
+    python -m minimidl generate examples/task-manager/task_manager.idl --target swift --output ./tmp/swift-example
+    @echo "Swift example generated in ./tmp/swift-example"
+
+# Generate all examples
+examples: example-cpp example-swift
+
+# Test fixture generation
+generate-fixture NAME:
+    python -m minimidl generate tests/fixtures/{{NAME}}.idl --target all --output ./tmp/{{NAME}}
+    @echo "Generated test fixture in ./tmp/{{NAME}}"
+
+# Parse IDL file and show AST
+parse-debug FILE:
+    python -m minimidl parse {{FILE}} --json | python -m json.tool
+
+# Validate IDL file with verbose output
+validate-debug FILE:
+    python -m minimidl --verbose validate {{FILE}}
+
+# Run specific test file
+test-file FILE:
+    python -m pytest {{FILE}} -v
+
+# Run tests with specific marker
+test-mark MARK:
+    python -m pytest -m {{MARK}} -v
+
+# Update test snapshots
+test-update:
+    python -m pytest tests/ --snapshot-update
+
+# Watch mode for development
+watch:
+    watchmedo auto-restart --patterns="*.py" --recursive -- python -m minimidl
+
+# Profile CLI performance
+profile CMD:
+    python -m cProfile -o profile.stats -m minimidl {{CMD}}
+    python -m pstats profile.stats
+
+# Check for security issues
+security:
+    pip-audit
+    bandit -r minimidl/
+
+# Generate requirements file
+requirements:
+    uv pip freeze > requirements.txt
+
+# Install in editable mode with all extras
+install-all:
+    uv pip install -e ".[dev,docs]"
+
+# Debug parser grammar
+debug-parser:
+    python -c "from minimidl.parser.grammar import get_parser; print(get_parser().pretty())"
+
+# Run integration tests only
+test-integration:
+    python -m pytest tests/integration/ -v
+
+# Run unit tests only
+test-unit:
+    python -m pytest tests/unit/ -v
+
+# Generate test coverage badge
+coverage-badge:
+    coverage-badge -o assets/coverage.svg
+
+# Serve documentation with auto-reload
+docs-dev:
+    mkdocs serve --dev-addr 0.0.0.0:8001
+
+# Deploy documentation to GitHub Pages
+docs-deploy:
+    mkdocs gh-deploy
+
+# Check for outdated dependencies
+deps-outdated:
+    pip list --outdated
+
+# Update all dependencies
+deps-update:
+    uv pip install --upgrade -e ".[dev,docs]"
+
+# Create source distribution
+sdist:
+    python -m build --sdist
+
+# Create wheel distribution
+wheel:
+    python -m build --wheel
+
+# Test installation in clean environment
+test-install:
+    uv venv tmp-env
+    tmp-env/bin/pip install dist/*.whl
+    tmp-env/bin/minimidl --help
+    rm -rf tmp-env
+
+# Run benchmarks
+bench:
+    python -m pytest tests/benchmarks/ -v --benchmark-only
+
+# Generate API documentation
+api-docs:
+    pdoc --html --output-dir docs/api minimidl

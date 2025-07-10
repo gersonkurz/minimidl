@@ -1,0 +1,94 @@
+site_name: MinimIDL Documentation
+site_description: Modern Interface Definition Language compiler
+site_author: MinimIDL Contributors
+site_url: https://minimidl.readthedocs.io
+
+repo_name: minimidl
+repo_url: https://github.com/yourusername/minimidl
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            show_category_heading: true
+            docstring_style: google
+            merge_init_into_class: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: installation.md
+      - Quick Start: quickstart.md
+  - Language Reference: language-reference.md
+  - Integration Guides:
+      - C++ Integration: cpp-integration.md
+      - Swift Integration: swift-integration.md
+  - Examples:
+      - Basic Example: examples/basic.md
+      - Advanced Features: examples/advanced.md
+      - Real-World Usage: examples/real-world.md
+  - API Reference:
+      - Parser: api-reference/parser.md
+      - AST: api-reference/ast.md
+      - Generators: api-reference/generators.md
+      - CLI: api-reference/cli.md
+  - Troubleshooting: troubleshooting.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/yourusername/minimidl
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/minimidl/

@@ -1,0 +1,58 @@
+// Test fixture with multiple namespaces
+namespace Core {
+    enum Result : int32_t {
+        SUCCESS = 0,
+        FAILURE = 1,
+        PENDING = 2
+    }
+    
+    interface ILogger {
+        void Log(string_t message);
+        string_t[] GetLogs();
+        void Clear();
+    }
+}
+
+namespace Network {
+    // Forward declaration from another namespace requires full qualification in implementation
+    interface IConnection;
+    
+    enum Protocol : int32_t {
+        TCP = 0,
+        UDP = 1,
+        HTTP = 2,
+        HTTPS = 3
+    }
+    
+    interface IConnection {
+        string_t GetAddress();
+        Protocol GetProtocol();
+        bool IsConnected();
+        void Close();
+    }
+    
+    interface IServer {
+        void Start(int32_t port);
+        void Stop();
+        IConnection? AcceptConnection();
+        int32_t GetConnectionCount();
+    }
+}
+
+namespace Application {
+    interface IModule {
+        string_t GetName();
+        string_t GetVersion();
+        void Initialize();
+        void Shutdown();
+    }
+    
+    interface ISystem {
+        IModule? LoadModule(string_t path);
+        void UnloadModule(string_t name);
+        string_t[] ListModules();
+        
+        // These would need to reference Core::ILogger and Network::IServer in implementation
+        // but IDL keeps namespaces separate
+    }
+}

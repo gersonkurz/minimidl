@@ -1,0 +1,150 @@
+// Complete MinimIDL test fixture with all features
+namespace Complete {
+    // Enumerations
+    enum Status : int32_t {
+        IDLE = 0,
+        RUNNING = 1,
+        STOPPED = 2,
+        ERROR = -1
+    }
+    
+    enum LogLevel : int32_t {
+        DEBUG = 0,
+        INFO = 1,
+        WARNING = 2,
+        ERROR = 3,
+        FATAL = 4
+    }
+    
+    // Forward declarations
+    interface IEventHandler;
+    interface IService;
+    
+    // Type definitions
+    typedef string_t[] StringArray;
+    typedef dict<string_t, string_t> StringMap;
+    typedef set<int32_t> IntSet;
+    
+    // Constants
+    const int32_t MAX_BUFFER_SIZE = 1024;
+    const int32_t DEFAULT_TIMEOUT = 30;
+    const int32_t VERSION_MAJOR = 1;
+    const int32_t VERSION_MINOR = 0;
+    const int32_t FLAGS = (0x01 << 8) | 0xFF;
+    
+    // Complex interface with properties
+    interface IConfiguration {
+        // Read-only properties
+        string_t name;
+        int32_t version;
+        Status status;
+        
+        // Writable properties
+        string_t description writable;
+        int32_t timeout writable;
+        bool enabled writable;
+        
+        // Methods
+        string_t GetValue(string_t key);
+        void SetValue(string_t key, string_t value);
+        string_t[] GetKeys();
+        bool HasKey(string_t key);
+        void Clear();
+    }
+    
+    // Interface with collections
+    interface IDataStore {
+        // Array properties
+        string_t[] tags writable;
+        int32_t[] values;
+        
+        // Dictionary property
+        dict<string_t, string_t> metadata writable;
+        
+        // Set property
+        set<string_t> categories;
+        
+        // Methods with complex types
+        void AddItems(string_t[] items);
+        string_t[] GetItems(int32_t offset, int32_t count);
+        dict<string_t, int32_t> GetStatistics();
+        set<string_t> GetUniqueValues(string_t field);
+    }
+    
+    // Interface with nullable types
+    interface IUserManager {
+        // Nullable return types
+        IUser? FindUser(string_t username);
+        string_t? GetEmail(int32_t userId);
+        
+        // Nullable parameters
+        void UpdateUser(int32_t userId, string_t? email, string_t? phone);
+        IUser[] SearchUsers(string_t? name, string_t? department);
+        
+        // Nullable properties
+        IUser? currentUser;
+        string_t? defaultDepartment writable;
+    }
+    
+    // Event handler interface
+    interface IEventHandler {
+        void OnEvent(string_t eventType, dict<string_t, string_t> data);
+        void OnError(Status status, string_t message);
+        bool CanHandle(string_t eventType);
+    }
+    
+    // Service interface with dependencies
+    interface IService {
+        // Interface references
+        IConfiguration GetConfiguration();
+        void SetEventHandler(IEventHandler? handler);
+        
+        // Lifecycle methods
+        void Initialize(dict<string_t, string_t> options);
+        void Start();
+        void Stop();
+        Status GetStatus();
+        
+        // Logging
+        void Log(LogLevel level, string_t message);
+        string_t[] GetLogs(LogLevel minLevel);
+    }
+    
+    // User interface
+    interface IUser {
+        // Properties
+        int32_t id;
+        string_t username;
+        string_t email writable;
+        string_t phone writable;
+        bool active writable;
+        
+        // Methods
+        string_t GetFullName();
+        void SetPassword(string_t password);
+        bool Authenticate(string_t password);
+        string_t[] GetRoles();
+        void AddRole(string_t role);
+        void RemoveRole(string_t role);
+    }
+    
+    // Main application interface
+    interface IApplication {
+        // Service management
+        IService CreateService(string_t name, dict<string_t, string_t> config);
+        IService? GetService(string_t name);
+        string_t[] ListServices();
+        void RemoveService(string_t name);
+        
+        // User management
+        IUserManager GetUserManager();
+        
+        // Data access
+        IDataStore GetDataStore(string_t name);
+        string_t[] ListDataStores();
+        
+        // Application info
+        string_t GetVersion();
+        dict<string_t, string_t> GetInfo();
+    }
+}

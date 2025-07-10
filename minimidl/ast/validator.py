@@ -73,7 +73,7 @@ class SemanticValidator:
 
         # Register forward declarations
         for forward in namespace.forward_declarations:
-            self._register_type(forward.name, "interface")
+            self._register_type(forward.name, "forward")
 
         # Register interfaces
         for interface in namespace.interfaces:
@@ -93,15 +93,14 @@ class SemanticValidator:
 
         if full_name in self.type_registry:
             # Check if it's a forward declaration being defined
-            if self.type_registry[full_name] == "interface" and kind == "interface":
+            if self.type_registry[full_name] == "forward" and kind == "interface":
                 # This is OK - forward declaration being defined
+                self.type_registry[full_name] = kind
                 return
 
             self.errors.append(ValidationError(f"Duplicate type definition: {name}"))
         else:
             self.type_registry[full_name] = kind
-            # Also register without namespace for local lookups
-            self.type_registry[name] = kind
             logger.debug(f"Registered type: {full_name} ({kind})")
 
     def _validate_namespace(self, namespace: Namespace) -> None:
@@ -220,13 +219,9 @@ class SemanticValidator:
 
     def _type_exists(self, name: str) -> bool:
         """Check if a type exists in the registry."""
-        # Check with namespace prefix first
+        # Check with namespace prefix (types in same namespace)
         full_name = f"{self.current_namespace}::{name}"
         if full_name in self.type_registry:
-            return True
-
-        # Check without namespace (for types in same namespace)
-        if name in self.type_registry:
             return True
 
         # Check if it's "void" (special case for return types)

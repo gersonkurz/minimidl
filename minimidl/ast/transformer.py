@@ -313,9 +313,15 @@ class IDLTransformer(Transformer):
         """Transform shift expression."""
         if len(items) == 1:
             return items[0]
+        if len(items) == 2:
+            # Handle case where we only have operator and right operand
+            if isinstance(items[0], Token):
+                return UnaryExpression(operator=items[0].value, operand=items[1])
+            else:
+                return items[0]
         result = items[0]
         i = 1
-        while i < len(items):
+        while i < len(items) - 1:
             op = items[i].value if isinstance(items[i], Token) else items[i]
             result = BinaryExpression(operator=op, left=result, right=items[i + 1])
             i += 2
@@ -327,7 +333,7 @@ class IDLTransformer(Transformer):
             return items[0]
         result = items[0]
         i = 1
-        while i < len(items):
+        while i < len(items) - 1:
             op = items[i].value if isinstance(items[i], Token) else items[i]
             result = BinaryExpression(operator=op, left=result, right=items[i + 1])
             i += 2
@@ -339,7 +345,7 @@ class IDLTransformer(Transformer):
             return items[0]
         result = items[0]
         i = 1
-        while i < len(items):
+        while i < len(items) - 1:
             op = items[i].value if isinstance(items[i], Token) else items[i]
             result = BinaryExpression(operator=op, left=result, right=items[i + 1])
             i += 2

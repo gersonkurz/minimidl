@@ -1,0 +1,88 @@
+// Task Manager API - Example MinimIDL project
+namespace TaskManager {
+    // Task priority levels
+    enum Priority : int32_t {
+        LOW = 0,
+        MEDIUM = 1,
+        HIGH = 2,
+        URGENT = 3
+    }
+    
+    // Task status
+    enum Status : int32_t {
+        PENDING = 0,
+        IN_PROGRESS = 1,
+        COMPLETED = 2,
+        CANCELLED = 3
+    }
+    
+    // Forward declarations
+    interface ITask;
+    interface IProject;
+    
+    // Task interface
+    interface ITask {
+        // Read-only properties
+        string_t id;
+        string_t title;
+        string_t created_at;
+        
+        // Writable properties
+        string_t description writable;
+        Priority priority writable;
+        Status status writable;
+        string_t due_date writable;
+        string_t[] tags writable;
+        
+        // Methods
+        void Complete();
+        void Cancel();
+        bool IsOverdue();
+        dict<string_t, string_t> GetMetadata();
+        void SetMetadata(string_t key, string_t value);
+    }
+    
+    // Project interface
+    interface IProject {
+        // Properties
+        string_t id;
+        string_t name writable;
+        string_t description writable;
+        bool active writable;
+        
+        // Task management
+        ITask CreateTask(string_t title, string_t description);
+        ITask? GetTask(string_t taskId);
+        ITask[] GetTasks();
+        ITask[] GetTasksByStatus(Status status);
+        bool DeleteTask(string_t taskId);
+        
+        // Project statistics
+        int32_t GetTaskCount();
+        int32_t GetCompletedCount();
+        dict<string_t, int32_t> GetTaskCountByStatus();
+    }
+    
+    // Main task manager interface
+    interface ITaskManager {
+        // Project management
+        IProject CreateProject(string_t name);
+        IProject? GetProject(string_t projectId);
+        IProject[] GetProjects();
+        IProject[] GetActiveProjects();
+        bool DeleteProject(string_t projectId);
+        
+        // Cross-project task search
+        ITask[] SearchTasks(string_t query);
+        ITask[] GetTasksByPriority(Priority priority);
+        ITask[] GetOverdueTasks();
+        
+        // User preferences
+        dict<string_t, string_t> GetSettings();
+        void UpdateSettings(dict<string_t, string_t> settings);
+        
+        // Data persistence
+        void Save(string_t path);
+        void Load(string_t path);
+    }
+}

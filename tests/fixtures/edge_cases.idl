@@ -1,0 +1,112 @@
+// Edge cases and stress test for MinimIDL parser
+namespace EdgeCases {
+    // Empty interface
+    interface IEmpty {
+    }
+    
+    // Single method interface
+    interface ISingle {
+        void DoIt();
+    }
+    
+    // Complex expressions in constants
+    const int32_t ZERO = 0;
+    const int32_t ONE = 1;
+    const int32_t NEGATIVE = -42;
+    const int32_t HEX_VALUE = 0xFF;
+    const int32_t BINARY_VALUE = 0b11111111;
+    const int32_t SHIFTED = 1 << 8;
+    const int32_t COMPLEX = (1 << 16) | 0xFF;
+    const int32_t MATH = (100 + 200) * 3;
+    const int32_t NESTED = ((1 << 8) | (1 << 4)) & 0xFF;
+    
+    // Enum with various value formats
+    enum MixedValues : int32_t {
+        ZERO = 0,
+        ONE = 1,
+        HEX = 0xDEADBEEF,
+        BINARY = 0b10101010,
+        NEGATIVE = -1,
+        SHIFTED = 1 << 10,
+        EXPRESSION = (1 << 8) | 0x0F
+    }
+    
+    // Deeply nested types
+    typedef string_t[] StringArray;
+    typedef StringArray[] StringArrayArray;
+    typedef dict<string_t, StringArray> StringToArrayMap;
+    typedef dict<string_t, dict<string_t, string_t>> NestedDict;
+    typedef set<set<int32_t>> SetOfSets;
+    
+    // Interface with all primitive types
+    interface IPrimitives {
+        // All primitive types as return values
+        void ReturnVoid();
+        bool ReturnBool();
+        int32_t ReturnInt32();
+        int64_t ReturnInt64();
+        float ReturnFloat();
+        double ReturnDouble();
+        string_t ReturnString();
+        
+        // All primitive types as parameters
+        void AcceptAll(
+            bool b,
+            int32_t i32,
+            int64_t i64,
+            float f,
+            double d,
+            string_t s
+        );
+        
+        // All primitive types as properties
+        bool boolProp;
+        int32_t int32Prop writable;
+        int64_t int64Prop;
+        float floatProp writable;
+        double doubleProp;
+        string_t stringProp writable;
+    }
+    
+    // Interface with maximum nesting
+    interface IComplex {
+        // Deeply nested return type
+        dict<string_t, dict<string_t, set<string_t[]>>> GetDeepData();
+        
+        // Multiple nullable levels
+        IEmpty? GetMaybeEmpty();
+        IEmpty?[] GetArrayOfMaybes();
+        dict<string_t, IEmpty?> GetMapOfMaybes();
+        
+        // Long parameter lists
+        void ManyParams(
+            string_t p1,
+            string_t p2,
+            string_t p3,
+            string_t p4,
+            string_t p5,
+            int32_t p6,
+            int32_t p7,
+            int32_t p8,
+            bool p9,
+            bool p10
+        );
+    }
+    
+    // Unicode and special characters in strings
+    interface IUnicode {
+        string_t GetEmoji();  // Implementation returns "🚀"
+        string_t GetChinese(); // Implementation returns "你好"
+        string_t GetSpecial(); // Implementation returns "Line1\nLine2\tTab"
+    }
+    
+    // Reserved word avoidance (potential conflicts)
+    interface IReserved {
+        void class();  // 'class' is method name, not keyword
+        void interface(); // 'interface' is method name
+        void namespace(); // 'namespace' is method name
+        
+        string_t type;  // 'type' as property name
+        string_t enum writable;  // 'enum' as property name
+    }
+}

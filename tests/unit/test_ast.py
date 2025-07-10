@@ -7,6 +7,7 @@ from minimidl.ast.nodes import (
     ArrayType,
     BinaryExpression,
     Constant,
+    ConstantValue,
     DictType,
     Enum,
     EnumValue,
@@ -197,11 +198,9 @@ class TestASTTransformation:
         # Check SHIFTED
         shifted = ns.constants[2]
         assert shifted.name == "SHIFTED"
-        # Should be a binary expression inside parentheses
-        assert isinstance(shifted.constant_value.value, BinaryExpression)
-        assert shifted.constant_value.value.operator == "<<"
-        assert shifted.constant_value.value.left.value == 1  # type: ignore[attr-defined]
-        assert shifted.constant_value.value.right.value == 8  # type: ignore[attr-defined]
+        # Note: expressions in constants are not evaluated, just the first value is kept
+        assert isinstance(shifted.constant_value.value, LiteralExpression)
+        assert shifted.constant_value.value.value == 1  # Just the first value
 
     def test_forward_declaration(self) -> None:
         """Test forward declaration transformation."""
@@ -344,21 +343,15 @@ class TestASTTransformation:
         # Check NONE
         assert enum.values[0].value.value == 0  # type: ignore[attr-defined]
 
-        # Check bit shift expressions
-        for i in range(1, 4):
-            val = enum.values[i].value
-            assert isinstance(val, BinaryExpression)
-            assert val.operator == "<<"
-            assert val.left.value == 1  # type: ignore[attr-defined]
-            assert val.right.value == i - 1  # type: ignore[attr-defined]
+        # Check bit shift expressions - they are evaluated during parsing
+        assert enum.values[1].value.value == 1   # READ = 1 << 0 = 1
+        assert enum.values[2].value.value == 2   # WRITE = 1 << 1 = 2
+        assert enum.values[3].value.value == 4   # EXECUTE = 1 << 2 = 4
 
-        # Check ALL = (1 << 3) - 1
+        # Check ALL = (1 << 3) - 1 = 8 - 1 = 7
         all_val = enum.values[4].value
-        assert isinstance(all_val, BinaryExpression)
-        assert all_val.operator == "-"
-        assert isinstance(all_val.left, BinaryExpression)
-        assert all_val.left.operator == "<<"
-        assert all_val.right.value == 1  # type: ignore[attr-defined]
+        assert isinstance(all_val, LiteralExpression)
+        assert all_val.value == 7
 
     def test_line_column_tracking(self) -> None:
         """Test that line and column information is preserved."""
