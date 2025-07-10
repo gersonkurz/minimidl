@@ -43,7 +43,7 @@ namespace Example {
 Generate code with one command:
 
 ```bash
-minimidl generate example.idl --target all --output ./generated
+python -m minimidl generate example.idl --target all --output ./generated
 ```
 
 This creates:

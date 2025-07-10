@@ -18,13 +18,13 @@ This example demonstrates a complete task management API using MinimIDL.
 
 ```bash
 # Generate C++ implementation
-minimidl generate task_manager.idl --target cpp --output ./cpp
+python -m minimidl generate task_manager.idl --target cpp --output ./cpp
 
 # Generate Swift implementation
-minimidl generate task_manager.idl --target swift --output ./swift
+python -m minimidl generate task_manager.idl --target swift --output ./swift
 
 # Or generate everything
-minimidl generate task_manager.idl --target all --output ./generated
+python -m minimidl generate task_manager.idl --target all --output ./generated
 ```
 
 ### 2. Build C++ Version

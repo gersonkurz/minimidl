@@ -157,7 +157,7 @@ namespace MyAPI {
 EOF
 
 # Generate Swift bindings
-minimidl --target swift myapi.idl
+python -m minimidl generate myapi.idl --target swift --output swift_output
 
 # Build and use
 cd swift_output

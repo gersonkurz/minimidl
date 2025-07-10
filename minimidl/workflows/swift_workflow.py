@@ -61,9 +61,11 @@ class SwiftWorkflow:
         c_files = self.c_wrapper_generator.generate(idl_file, c_wrapper_dir)
         generated_files.extend(c_files)
 
-        # Generate C++ implementation stubs
-        cpp_impl_files = self._generate_cpp_implementation(idl_file, c_impl_dir)
-        generated_files.extend(cpp_impl_files)
+        # Generate C++ implementation stubs only if explicitly requested
+        # Note: Swift bindings only need the C wrapper, not C++ implementation
+        if self.config.get("include_cpp_stubs", False):
+            cpp_impl_files = self._generate_cpp_implementation(idl_file, c_impl_dir)
+            generated_files.extend(cpp_impl_files)
 
         # Generate Swift package
         logger.info("Generating Swift package...")

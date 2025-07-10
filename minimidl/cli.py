@@ -18,6 +18,7 @@ from minimidl.generators.c_wrapper import CWrapperGenerator
 from minimidl.generators.cpp import CppGenerator
 from minimidl.generators.swift import SwiftGenerator
 from minimidl.parser import IDLParser
+from minimidl.workflows.c_workflow import CWorkflow
 from minimidl.workflows.cpp_workflow import CppWorkflow
 from minimidl.workflows.swift_workflow import SwiftWorkflow
 
@@ -149,7 +150,7 @@ def generate(
             "--target",
             help="Target language/format (cpp, c, swift, all)",
         ),
-    ] = "cpp",
+    ] = "all",
     output_dir: Annotated[
         Path, typer.Option("-o", "--output", help="Output directory")
     ] = Path("."),
@@ -256,7 +257,7 @@ def generate(
             for tgt in targets:
                 status.update(f"[bold green]Generating {tgt.upper()} code...[/bold green]")
                 
-                if project and tgt in ["cpp", "swift"]:
+                if project and tgt in ["cpp", "c", "swift"]:
                     # Use workflow for complete project
                     generated_files = _generate_with_workflow(
                         ast, tgt, output_dir, config, template_dir
@@ -288,6 +289,9 @@ def _generate_with_workflow(
     """Generate using workflow for complete project."""
     if target == "cpp":
         workflow = CppWorkflow(config)
+        return workflow.generate_project(ast, output_dir)
+    elif target == "c":
+        workflow = CWorkflow(config)
         return workflow.generate_project(ast, output_dir)
     elif target == "swift":
         workflow = SwiftWorkflow(config)

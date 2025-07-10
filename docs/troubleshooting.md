@@ -130,13 +130,13 @@ namespace API {
 **Check**:
 ```bash
 # Verify output directory
-minimidl generate api.idl --target cpp --output ./output
+python -m minimidl generate api.idl --target cpp --output ./output
 
 # Check for validation errors
-minimidl validate api.idl
+python -m minimidl validate api.idl
 
 # Enable verbose mode
-minimidl --verbose generate api.idl --target cpp
+python -m minimidl --verbose generate api.idl --target cpp
 ```
 
 ### Generated Code Doesn't Compile
@@ -253,10 +253,10 @@ wget https://swift.org/builds/swift-5.9-release/ubuntu2204/swift-5.9-RELEASE/swi
 **Path Issues**:
 ```powershell
 # Use forward slashes or raw strings
-minimidl generate C:/path/to/api.idl --output C:/output
+python -m minimidl generate C:/path/to/api.idl --output C:/output
 
 # Or
-minimidl generate "C:\path\to\api.idl" --output "C:\output"
+python -m minimidl generate "C:\path\to\api.idl" --output "C:\output"
 ```
 
 **Visual Studio**:
@@ -273,8 +273,8 @@ cmake .. -G "Visual Studio 17 2022"
 **Large IDL Files**:
 ```bash
 # Use AST caching
-minimidl generate large.idl --cache-ast
-minimidl generate --from-ast large.ast --target cpp
+python -m minimidl generate large.idl --cache-ast
+python -m minimidl generate --from-ast large.ast --target cpp
 ```
 
 ### Memory Usage
@@ -296,7 +296,7 @@ std::vector<Item> GetItems() {
 
 ```bash
 # See detailed output
-minimidl --verbose generate api.idl --target cpp
+python -m minimidl --verbose generate api.idl --target cpp
 
 # Set log level in Python code
 import logging
@@ -317,16 +317,16 @@ grep -r "TODO" generated/
 
 ```bash
 # 1. Validate IDL
-minimidl validate api.idl
+python -m minimidl validate api.idl
 
 # 2. Parse to JSON
-minimidl parse api.idl --json -o ast.json
+python -m minimidl parse api.idl --json -o ast.json
 
 # 3. Examine AST
 cat ast.json | jq .
 
 # 4. Generate one target at a time
-minimidl generate api.idl --target cpp
+python -m minimidl generate api.idl --target cpp
 ```
 
 ## Common Error Messages

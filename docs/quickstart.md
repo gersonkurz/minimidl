@@ -35,7 +35,7 @@ namespace Calculator {
 ## 2. Generate C++ Code
 
 ```bash
-minimidl generate calculator.idl --target cpp --output ./cpp_calculator
+python -m minimidl generate calculator.idl --target cpp --output ./cpp_calculator
 ```
 
 This creates a complete C++ project:
@@ -98,7 +98,7 @@ double result = calc->Calculate(10, 5, Calculator::Operation::ADD);
 ## 3. Generate Swift Code
 
 ```bash
-minimidl generate calculator.idl --target swift --output ./swift_calculator
+python -m minimidl generate calculator.idl --target swift --output ./swift_calculator
 ```
 
 This creates a Swift package with C interop:
@@ -138,7 +138,7 @@ print("Mode: \(calc.scientificMode)")
 ## 4. Generate Everything at Once
 
 ```bash
-minimidl generate calculator.idl --target all --output ./calculator_sdk
+python -m minimidl generate calculator.idl --target all --output ./calculator_sdk
 ```
 
 This generates:
@@ -180,10 +180,10 @@ For large projects, cache the parsed AST:
 
 ```bash
 # Parse once and cache
-minimidl generate api.idl --cache-ast --target cpp
+python -m minimidl generate api.idl --cache-ast --target cpp
 
 # Reuse cached AST
-minimidl generate --from-ast api.ast --target swift
+python -m minimidl generate --from-ast api.ast --target swift
 ```
 
 ## 7. Validation
