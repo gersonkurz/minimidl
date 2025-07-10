@@ -9,6 +9,7 @@ from loguru import logger
 from minimidl.ast.validator import SemanticValidator
 from minimidl.generators.c_wrapper import CWrapperGenerator
 from minimidl.generators.cpp import CppGenerator
+from minimidl.generators.swift import SwiftGenerator
 from minimidl.parser import IDLParser
 
 app = typer.Typer(
@@ -102,9 +103,11 @@ def generate(
             generator = CppGenerator(template_dir=template_dir)
         elif language == "c":
             generator = CWrapperGenerator(template_dir=template_dir)
+        elif language == "swift":
+            generator = SwiftGenerator(template_dir=template_dir)
         else:
             typer.echo(f"Unsupported language: {language}", err=True)
-            typer.echo("Supported languages: cpp, c")
+            typer.echo("Supported languages: cpp, c, swift")
             raise typer.Exit(1)
 
         # Generate files

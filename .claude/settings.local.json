@@ -13,7 +13,11 @@
       "Bash(uv run minimidl generate:*)",
       "Bash(git add:*)",
       "Bash(grep:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(./.venv/bin/pytest tests/unit/test_swift_generator.py -v)",
+      "Bash(./.venv/bin/pytest -v)",
+      "Bash(./.venv/bin/pytest tests/integration/test_swift_generation.py -v)",
+      "Bash(./.venv/bin/minimidl:*)"
     ],
     "deny": []
   }
