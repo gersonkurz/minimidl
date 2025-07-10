@@ -1,8 +1,6 @@
 """MinimIDL command-line entry point."""
 
-import sys
-
-from minimidl.cli import main
+from minimidl.cli import app
 
 if __name__ == "__main__":
-    sys.exit(main())
+    app()
