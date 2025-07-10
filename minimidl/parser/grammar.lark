@@ -56,7 +56,15 @@ set_type: "set" "<" basic_type ">"
 
 basic_type: primitive_type | string_type | IDENTIFIER
 
-primitive_type: "bool" | "int32_t" | "int64_t" | "float" | "double"
+primitive_type: VOID | BOOL | INT32 | INT64 | FLOAT | DOUBLE
+
+// Primitive type terminals  
+VOID: "void"
+BOOL: "bool"
+INT32: "int32_t"
+INT64: "int64_t"
+FLOAT: "float"
+DOUBLE: "double"
 string_type: "string_t"
 
 // Expressions (for constants and enum values)

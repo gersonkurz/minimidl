@@ -12,7 +12,7 @@ class TestBasicParsing:
     def test_empty_namespace(self) -> None:
         """Test parsing an empty namespace."""
         idl = "namespace Test {}"
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert isinstance(tree, Tree)
         assert tree.data == "start"
         assert len(tree.children) == 1
@@ -24,7 +24,7 @@ class TestBasicParsing:
         namespace First {}
         namespace Second {}
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert len(tree.children) == 2
         assert all(child.data == "namespace_decl" for child in tree.children)
 
@@ -37,7 +37,7 @@ class TestBasicParsing:
         }
         // Final comment
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert len(tree.children) == 1
 
 
@@ -51,7 +51,7 @@ class TestInterfaceDeclarations:
             interface IEmpty {}
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         ns_body = tree.children[0].children[1]
         interface = ns_body.children[0]
         assert interface.data == "interface_decl"
@@ -67,7 +67,7 @@ class TestInterfaceDeclarations:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         ns_body = tree.children[0].children[1]
         interface = ns_body.children[0]
         assert len(interface.children) == 3  # name + 2 methods
@@ -83,7 +83,7 @@ class TestInterfaceDeclarations:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         ns_body = tree.children[0].children[1]
         interface = ns_body.children[0]
         members = [child for child in interface.children if hasattr(child, "data")]
@@ -99,7 +99,7 @@ class TestInterfaceDeclarations:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         ns_body = tree.children[0].children[1]
         assert ns_body.children[0].data == "forward_decl"
         assert ns_body.children[1].data == "interface_decl"
@@ -122,7 +122,7 @@ class TestTypeSystem:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_nullable_types(self) -> None:
@@ -135,7 +135,7 @@ class TestTypeSystem:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_array_types(self) -> None:
@@ -149,7 +149,7 @@ class TestTypeSystem:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_dict_types(self) -> None:
@@ -162,7 +162,7 @@ class TestTypeSystem:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_set_types(self) -> None:
@@ -175,7 +175,7 @@ class TestTypeSystem:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
 
@@ -193,7 +193,7 @@ class TestEnumDeclarations:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_enum_with_hex_values(self) -> None:
@@ -207,7 +207,7 @@ class TestEnumDeclarations:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_enum_with_binary_values(self) -> None:
@@ -222,7 +222,7 @@ class TestEnumDeclarations:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_enum_with_bit_shifting(self) -> None:
@@ -238,7 +238,7 @@ class TestEnumDeclarations:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_enum_trailing_comma(self) -> None:
@@ -251,7 +251,7 @@ class TestEnumDeclarations:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
 
@@ -266,7 +266,7 @@ class TestConstantDeclarations:
             const int32_t MIN_SIZE = 0;
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_hex_constants(self) -> None:
@@ -277,7 +277,7 @@ class TestConstantDeclarations:
             const int64_t BIG_MASK = 0xFFFFFFFF;
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_binary_constants(self) -> None:
@@ -287,7 +287,7 @@ class TestConstantDeclarations:
             const int32_t FLAGS = 0b11010010;
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_expression_constants(self) -> None:
@@ -298,7 +298,7 @@ class TestConstantDeclarations:
             const int32_t COMBINED = (1 << 8) | 0xFF;
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
 
@@ -313,7 +313,7 @@ class TestTypedefDeclarations:
             typedef string_t UserName;
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_typedef_arrays(self) -> None:
@@ -324,7 +324,7 @@ class TestTypedefDeclarations:
             typedef string_t[] NameList;
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
 
@@ -383,7 +383,7 @@ class TestComplexScenarios:  # pylint: disable=too-few-public-methods
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
         assert len(tree.children) == 1  # One namespace
 
@@ -395,7 +395,7 @@ class TestErrorHandling:
         """Test that invalid syntax raises ParseError."""
         idl = "this is not valid IDL"
         with pytest.raises(ParseError):
-            parse_idl(idl)
+            parse_idl(idl, transform=False)
 
     def test_missing_semicolon(self) -> None:
         """Test that missing semicolons are caught."""
@@ -407,7 +407,7 @@ class TestErrorHandling:
         }
         """
         with pytest.raises(ParseError):
-            parse_idl(idl)
+            parse_idl(idl, transform=False)
 
     def test_invalid_type(self) -> None:
         """Test that invalid types are caught."""
@@ -420,7 +420,7 @@ class TestErrorHandling:
         """
         # Note: This will parse successfully as IDENTIFIER
         # Type validation would happen in a later phase
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
 
     def test_unclosed_namespace(self) -> None:
@@ -431,7 +431,7 @@ class TestErrorHandling:
         // Missing closing brace
         """
         with pytest.raises(ParseError):
-            parse_idl(idl)
+            parse_idl(idl, transform=False)
 
     def test_duplicate_enum_values(self) -> None:
         """Test that duplicate enum values parse (validation is semantic)."""
@@ -443,5 +443,5 @@ class TestErrorHandling:
             }
         }
         """
-        tree = parse_idl(idl)
+        tree = parse_idl(idl, transform=False)
         assert tree is not None
