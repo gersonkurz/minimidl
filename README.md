@@ -166,6 +166,35 @@ swift build
 
 That's it. You now have a complete Swift package that can talk to your C++ code.
 
+## Getting Started with the Documentation
+
+MinimIDL includes comprehensive documentation built with MkDocs. To view the documentation locally:
+
+```bash
+# Install documentation dependencies
+uv pip install -e ".[docs]"
+
+# Serve the documentation locally
+just docs-serve
+
+# Open your browser to http://localhost:8000
+```
+
+The documentation includes:
+- Complete IDL language reference
+- C++ integration guide
+- Swift integration guide
+- API reference
+- Examples and tutorials
+- Troubleshooting guide
+
+To build the documentation without serving:
+```bash
+just docs
+```
+
+The built documentation will be in the `site/` directory.
+
 ## Contributing
 
 This project represents a significant undertaking - we're essentially building a compiler with multiple code generation backends. We welcome contributions in:
