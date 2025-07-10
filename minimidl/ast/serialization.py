@@ -17,13 +17,13 @@ def save_ast(ast: IDLFile, path: Union[str, Path]) -> None:
         path: Path to save the JSON file.
     """
     path = Path(path)
-    
+
     # Ensure parent directory exists
     path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Convert to JSON with Pydantic
     json_data = ast.model_dump(mode="json", exclude_none=True)
-    
+
     # Write with pretty formatting
     with open(path, "w", encoding="utf-8") as f:
         json.dump(json_data, f, indent=2, ensure_ascii=False)
@@ -43,14 +43,14 @@ def load_ast(path: Union[str, Path]) -> IDLFile:
         ValueError: If the JSON is invalid.
     """
     path = Path(path)
-    
+
     if not path.exists():
         raise FileNotFoundError(f"AST file not found: {path}")
-    
+
     # Read JSON data
     with open(path, "r", encoding="utf-8") as f:
         json_data = json.load(f)
-    
+
     # Convert back to AST using Pydantic
     return IDLFile.model_validate(json_data)
 

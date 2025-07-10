@@ -37,12 +37,10 @@ class IDLParser:
         )
 
     @overload
-    def parse(self, idl_content: str, *, transform: bool = True) -> IDLFile:
-        ...
+    def parse(self, idl_content: str, *, transform: bool = True) -> IDLFile: ...
 
     @overload
-    def parse(self, idl_content: str, *, transform: bool = False) -> Tree[Any]:
-        ...
+    def parse(self, idl_content: str, *, transform: bool = False) -> Tree[Any]: ...
 
     def parse(self, idl_content: str, *, transform: bool = True) -> IDLFile | Tree[Any]:
         """Parse IDL content into an abstract syntax tree.
@@ -61,7 +59,7 @@ class IDLParser:
             logger.debug("Parsing IDL content")
             tree = self._parser.parse(idl_content)
             logger.debug("Successfully parsed IDL content")
-            
+
             if transform:
                 logger.debug("Transforming parse tree to AST")
                 ast = self._transformer.transform(tree)
@@ -73,12 +71,14 @@ class IDLParser:
             raise
 
     @overload
-    def parse_file(self, idl_path: str | Path, *, transform: bool = True) -> IDLFile:
-        ...
+    def parse_file(
+        self, idl_path: str | Path, *, transform: bool = True
+    ) -> IDLFile: ...
 
     @overload
-    def parse_file(self, idl_path: str | Path, *, transform: bool = False) -> Tree[Any]:
-        ...
+    def parse_file(
+        self, idl_path: str | Path, *, transform: bool = False
+    ) -> Tree[Any]: ...
 
     def parse_file(
         self, idl_path: str | Path, *, transform: bool = True
@@ -103,11 +103,11 @@ class IDLParser:
         logger.info(f"Parsing IDL file: {path}")
         content = path.read_text(encoding="utf-8")
         ast = self.parse(content, transform=transform)
-        
+
         # Set source file on AST if transformed
         if transform and isinstance(ast, IDLFile):
             ast.source_file = str(path)
-        
+
         return ast
 
 
@@ -134,13 +134,11 @@ def get_parser() -> IDLParser:
 
 
 @overload
-def parse_idl(idl_content: str, *, transform: bool = True) -> IDLFile:
-    ...
+def parse_idl(idl_content: str, *, transform: bool = True) -> IDLFile: ...
 
 
 @overload
-def parse_idl(idl_content: str, *, transform: bool = False) -> Tree[Any]:
-    ...
+def parse_idl(idl_content: str, *, transform: bool = False) -> Tree[Any]: ...
 
 
 def parse_idl(idl_content: str, *, transform: bool = True) -> IDLFile | Tree[Any]:
@@ -162,13 +160,11 @@ def parse_idl(idl_content: str, *, transform: bool = True) -> IDLFile | Tree[Any
 
 
 @overload
-def parse_idl_file(idl_path: str | Path, *, transform: bool = True) -> IDLFile:
-    ...
+def parse_idl_file(idl_path: str | Path, *, transform: bool = True) -> IDLFile: ...
 
 
 @overload
-def parse_idl_file(idl_path: str | Path, *, transform: bool = False) -> Tree[Any]:
-    ...
+def parse_idl_file(idl_path: str | Path, *, transform: bool = False) -> Tree[Any]: ...
 
 
 def parse_idl_file(

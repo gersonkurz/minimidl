@@ -20,8 +20,8 @@ from minimidl.ast.nodes import (
     Property,
     SetType,
     Type,
-    TypeRef,
     Typedef,
+    TypeRef,
 )
 from minimidl.ast.serialization import load_ast, save_ast
 from minimidl.ast.validator import ValidationError, validate_ast

@@ -1,75 +1,86 @@
 
-## Task 2: AST Node Definitions and Serialization
+## Task 3: C++ Interface Generator
 
 ### Objective
-Replace simple parser output with proper Pydantic AST node definitions and implement JSON serialization for AST caching.
+Implement the C++ interface generator with Jinja2 templates to create clean, professional C++ header files.
 
 ### Prerequisites
-- Task 1 completed successfully
-- Parser generating basic AST structures
+- Task 2 completed successfully
+- AST nodes properly defined and tested
 
 ### Deliverables
 
-**1. AST Node Definitions**
+**1. Generator Infrastructure**
 ```
-minimidl/ast/
+minimidl/generators/
 ├── __init__.py
-├── nodes.py                 # All Pydantic AST node classes
-└── serialization.py         # JSON save/load functionality
+├── base.py                  # Abstract base generator class
+└── cpp.py                   # C++ interface generator
 ```
 
-**2. Pydantic AST Node Classes**
-Create comprehensive node hierarchy:
-- `ASTNode` (base class)
-- `Namespace`, `Interface`, `Enum`, `Typedef`, `Constant`
-- `Method`, `Property`, `Parameter`
-- `Type`, `ArrayType`, `DictType`, `SetType`, `NullableType`
-- `EnumValue`, `ConstantValue`
-- `ForwardDeclaration`
+**2. C++ Templates**
+```
+minimidl/templates/cpp/
+├── interface.hpp.j2         # Interface class template
+├── implementation.hpp.j2    # Stub implementation header
+├── implementation.cpp.j2    # Stub implementation source
+├── factory.hpp.j2           # Factory pattern template
+└── CMakeLists.txt.j2        # CMake build configuration
+```
 
-**3. Parser Integration**
-- Update parser.py to generate proper AST nodes
-- Transformer class to convert Lark tree to AST
-- Type validation and semantic analysis
+**3. C++ Helper Library**
+```
+minimidl/helpers/
+└── minimidl_runtime.hpp     # Header-only runtime library
+```
 
-**4. JSON Serialization**
-- AST to JSON conversion with proper type handling
-- JSON to AST deserialization
-- File-based caching system
+**4. C++ Generator Implementation**
+- AST traversal and code generation
+- Namespace mapping
+- Type conversion (IDL types → C++ types)
+- Property generation (getters/setters)
+- Method signature generation
+- Forward declaration handling
 
-**5. Enhanced Testing**
-- AST node validation tests
-- Serialization round-trip tests
-- Semantic analysis tests (type checking, forward references)
+**5. Template System**
+- Jinja2 environment setup
+- Template inheritance for common patterns
+- Cross-platform compatibility (Windows/macOS/Linux)
 
 ### Success Criteria
-- All IDL constructs represented as proper AST nodes
-- JSON serialization preserves all AST information
-- Parser performs basic semantic validation
-- AST nodes have comprehensive type hints
-- Full test coverage for all node types
+- Generates compilable C++ header files
+- Clean, readable, professionally formatted code
+- Proper namespace organization
+- Complete CMake integration
+- All IDL constructs properly mapped to C++
+- Stub implementations with TODO comments for user completion
 
-### Example AST Structure
-```python
-@dataclass
-class Interface(ASTNode):
-    name: str
-    methods: List[Method]
-    properties: List[Property]
-    forward_declarations: List[str]
+### Example Generated Output
+```cpp
+// Generated from TestAPI.idl
+#pragma once
+
+#include "minimidl_runtime.hpp"
+
+namespace TestAPI {
     
-@dataclass
-class Method(ASTNode):
-    name: str
-    return_type: Type
-    parameters: List[Parameter]
+    class IUser : public minimidl::RefCounted {
+    public:
+        virtual ~IUser() = default;
+        
+        // Properties
+        virtual minimidl::string_t GetName() const = 0;
+        virtual void SetName(minimidl::string_t value) = 0;
+        virtual int32_t GetAge() const = 0;
+        virtual bool GetIsActive() const = 0;
+        virtual void SetIsActive(bool value) = 0;
+        
+        // Methods
+        virtual void UpdateProfile(minimidl::string_t name, int32_t age) = 0;
+        virtual minimidl::array_t<minimidl::string_t> GetTags() const = 0;
+    };
     
-@dataclass
-class Type(ASTNode):
-    name: str
-    nullable: bool = False
-    
-@dataclass
-class ArrayType(Type):
-    element_type: Type
+    // Factory function
+    extern "C" IUser* CreateUser();
+}
 ```

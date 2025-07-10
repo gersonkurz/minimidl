@@ -33,7 +33,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Unknown type 'UnknownType'"):
             validate_ast(ast)
 
@@ -69,7 +69,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Unknown type 'IUnknown'"):
             validate_ast(ast)
 
@@ -87,7 +87,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Duplicate type definition: IUser"):
             validate_ast(ast)
 
@@ -102,7 +102,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Duplicate method name 'GetName'"):
             validate_ast(ast)
 
@@ -117,7 +117,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Duplicate property name 'Name'"):
             validate_ast(ast)
 
@@ -132,7 +132,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(
             ValidationError, match="Property 'GetName' conflicts with method name"
         ):
@@ -148,10 +148,8 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
-        with pytest.raises(
-            ValidationError, match="Duplicate parameter name 'value'"
-        ):
+
+        with pytest.raises(ValidationError, match="Duplicate parameter name 'value'"):
             validate_ast(ast)
 
     def test_duplicate_enum_values(self) -> None:
@@ -166,7 +164,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Duplicate enum value 'ACTIVE'"):
             validate_ast(ast)
 
@@ -178,7 +176,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Unknown type 'UnknownType'"):
             validate_ast(ast)
 
@@ -192,7 +190,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Unknown type 'UnknownType'"):
             validate_ast(ast)
 
@@ -206,7 +204,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Unknown type 'UnknownType'"):
             validate_ast(ast)
 
@@ -220,7 +218,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Unknown type 'UnknownType'"):
             validate_ast(ast)
 
@@ -240,7 +238,7 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError, match="Unknown type 'IUser'"):
             validate_ast(ast)
 
@@ -291,10 +289,10 @@ class TestSemanticValidation:
         }
         """
         ast = parse_idl(idl)
-        
+
         with pytest.raises(ValidationError) as exc_info:
             validate_ast(ast)
-        
+
         error_msg = str(exc_info.value)
         assert "3 error(s)" in error_msg
         assert "UnknownType1" in error_msg

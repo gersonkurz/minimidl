@@ -5,7 +5,13 @@
       "Bash(just check)",
       "Bash(python -m pytest tests/ -v --tb=no)",
       "Bash(python -m pytest tests/unit/test_ast.py::TestASTTransformation::test_constant_transformation -xvs)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(just format)",
+      "Bash(pip show:*)",
+      "Bash(uv pip:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run minimidl generate:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

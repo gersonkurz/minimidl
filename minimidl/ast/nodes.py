@@ -74,7 +74,15 @@ class PrimitiveType(Type):
     @classmethod
     def validate_primitive(cls, v: str) -> str:
         """Validate primitive type name."""
-        valid_types = {"void", "bool", "int32_t", "int64_t", "float", "double", "string_t"}
+        valid_types = {
+            "void",
+            "bool",
+            "int32_t",
+            "int64_t",
+            "float",
+            "double",
+            "string_t",
+        }
         if v not in valid_types:
             raise ValueError(f"Invalid primitive type: {v}")
         return v

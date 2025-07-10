@@ -14,8 +14,8 @@ from minimidl.ast.nodes import (
     EnumValue,
     Expression,
     ForwardDeclaration,
-    IDLFile,
     IdentifierExpression,
+    IDLFile,
     Interface,
     LiteralExpression,
     Method,
@@ -27,8 +27,8 @@ from minimidl.ast.nodes import (
     Property,
     SetType,
     Type,
-    TypeRef,
     Typedef,
+    TypeRef,
     UnaryExpression,
 )
 
@@ -82,7 +82,7 @@ class IDLTransformer(Transformer):
             "constants": [],
             "forward_declarations": [],
         }
-        
+
         for item in items:
             if isinstance(item, Interface):
                 result["interfaces"].append(item)
@@ -94,7 +94,7 @@ class IDLTransformer(Transformer):
                 result["constants"].append(item)
             elif isinstance(item, ForwardDeclaration):
                 result["forward_declarations"].append(item)
-                
+
         return result
 
     # Forward declaration
@@ -112,13 +112,13 @@ class IDLTransformer(Transformer):
         name = items[0].value
         methods = []
         properties = []
-        
+
         for item in items[1:]:
             if isinstance(item, Method):
                 methods.append(item)
             elif isinstance(item, Property):
                 properties.append(item)
-                
+
         return Interface(
             name=name,
             methods=methods,
@@ -137,7 +137,7 @@ class IDLTransformer(Transformer):
         type_spec = items[0]
         name = items[1].value
         writable = len(items) > 2 and items[2] is not None
-        
+
         return Property(
             name=name,
             type=type_spec,
@@ -156,7 +156,7 @@ class IDLTransformer(Transformer):
         return_type = items[0]
         name = items[1].value
         parameters = items[2] if len(items) > 2 and items[2] else []
-        
+
         return Method(
             name=name,
             return_type=return_type,
@@ -183,9 +183,11 @@ class IDLTransformer(Transformer):
         """Transform enum declaration."""
         name = items[0].value
         # backing_type is now a PrimitiveType object
-        backing_type = items[1].name if isinstance(items[1], PrimitiveType) else items[1].value
+        backing_type = (
+            items[1].name if isinstance(items[1], PrimitiveType) else items[1].value
+        )
         values = items[2] if len(items) > 2 and items[2] else []
-        
+
         return Enum(
             name=name,
             backing_type=backing_type,
@@ -221,10 +223,12 @@ class IDLTransformer(Transformer):
     def const_decl(self, items: list[Any]) -> Constant:
         """Transform constant declaration."""
         # type is now a PrimitiveType object
-        type_name = items[0].name if isinstance(items[0], PrimitiveType) else items[0].value
+        type_name = (
+            items[0].name if isinstance(items[0], PrimitiveType) else items[0].value
+        )
         name = items[1].value
         value = items[2]
-        
+
         return Constant(
             name=name,
             constant_value=ConstantValue(type=type_name, value=value),
@@ -270,11 +274,11 @@ class IDLTransformer(Transformer):
         # Map token types to primitive names
         type_map = {
             "VOID": "void",
-            "BOOL": "bool", 
+            "BOOL": "bool",
             "INT32": "int32_t",
             "INT64": "int64_t",
             "FLOAT": "float",
-            "DOUBLE": "double"
+            "DOUBLE": "double",
         }
         return PrimitiveType(name=type_map.get(token.type, token.value))
 
@@ -364,7 +368,7 @@ class IDLTransformer(Transformer):
         token = items[0]
         value_str = token.value
         base = None
-        
+
         if token.type == "HEX_NUMBER":
             value = int(value_str, 16)
             base = "hex"
@@ -373,7 +377,7 @@ class IDLTransformer(Transformer):
             base = "binary"
         else:  # DECIMAL_NUMBER
             value = int(value_str)
-            
+
         return LiteralExpression(value=value, base=base)
 
     # Handle identifiers - return the token itself for non-type contexts
