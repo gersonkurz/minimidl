@@ -11,7 +11,9 @@
       "Bash(uv pip:*)",
       "Bash(uv run pytest:*)",
       "Bash(uv run minimidl generate:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

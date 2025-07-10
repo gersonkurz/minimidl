@@ -1,86 +1,87 @@
 
-## Task 3: C++ Interface Generator
+## Task 4: C Wrapper Generator
 
 ### Objective
-Implement the C++ interface generator with Jinja2 templates to create clean, professional C++ header files.
+Implement the C wrapper generator that creates C-compatible APIs from C++ interfaces, with cross-platform export handling.
 
 ### Prerequisites
-- Task 2 completed successfully
-- AST nodes properly defined and tested
+- Task 3 completed successfully
+- C++ interface generation working properly
 
 ### Deliverables
 
-**1. Generator Infrastructure**
+**1. C Wrapper Generator**
 ```
 minimidl/generators/
-├── __init__.py
-├── base.py                  # Abstract base generator class
-└── cpp.py                   # C++ interface generator
+└── c_wrapper.py             # C wrapper generator
 ```
 
-**2. C++ Templates**
+**2. C Wrapper Templates**
 ```
-minimidl/templates/cpp/
-├── interface.hpp.j2         # Interface class template
-├── implementation.hpp.j2    # Stub implementation header
-├── implementation.cpp.j2    # Stub implementation source
-├── factory.hpp.j2           # Factory pattern template
-└── CMakeLists.txt.j2        # CMake build configuration
-```
-
-**3. C++ Helper Library**
-```
-minimidl/helpers/
-└── minimidl_runtime.hpp     # Header-only runtime library
+minimidl/templates/c_wrapper/
+├── wrapper.h.j2             # C header declarations
+├── wrapper.cpp.j2           # C wrapper implementation
+├── exports.def.j2           # Windows export definitions
+└── CMakeLists.txt.j2        # C wrapper build configuration
 ```
 
-**4. C++ Generator Implementation**
-- AST traversal and code generation
-- Namespace mapping
-- Type conversion (IDL types → C++ types)
-- Property generation (getters/setters)
-- Method signature generation
-- Forward declaration handling
+**3. C Wrapper Generation Logic**
+- C-compatible function signatures
+- Object handle management (void* pointers)
+- String handling through const char*
+- Array/dictionary iteration interfaces
+- Memory management through refcounting
+- Error handling (return codes, not exceptions)
 
-**5. Template System**
-- Jinja2 environment setup
-- Template inheritance for common patterns
-- Cross-platform compatibility (Windows/macOS/Linux)
+**4. Cross-Platform Export Handling**
+- Windows: .def file generation
+- macOS/Linux: __attribute__((visibility("default")))
+- CMake configuration for both platforms
+
+**5. Test Harness Generation**
+```
+minimidl/templates/c_wrapper/
+├── testbed.c.j2             # Console test application
+└── testbed_cmake.txt.j2     # Test executable CMake
+```
 
 ### Success Criteria
-- Generates compilable C++ header files
-- Clean, readable, professionally formatted code
-- Proper namespace organization
+- C wrapper functions are pure C compatible
+- Proper memory management without leaks
+- Cross-platform compilation (Windows/macOS/Linux)
+- Generated test harness demonstrates all functionality
 - Complete CMake integration
-- All IDL constructs properly mapped to C++
-- Stub implementations with TODO comments for user completion
+- Professional error handling
 
-### Example Generated Output
-```cpp
-// Generated from TestAPI.idl
+### Example Generated C API
+```c
+// Generated C API from TestAPI.idl
 #pragma once
 
-#include "minimidl_runtime.hpp"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace TestAPI {
-    
-    class IUser : public minimidl::RefCounted {
-    public:
-        virtual ~IUser() = default;
-        
-        // Properties
-        virtual minimidl::string_t GetName() const = 0;
-        virtual void SetName(minimidl::string_t value) = 0;
-        virtual int32_t GetAge() const = 0;
-        virtual bool GetIsActive() const = 0;
-        virtual void SetIsActive(bool value) = 0;
-        
-        // Methods
-        virtual void UpdateProfile(minimidl::string_t name, int32_t age) = 0;
-        virtual minimidl::array_t<minimidl::string_t> GetTags() const = 0;
-    };
-    
-    // Factory function
-    extern "C" IUser* CreateUser();
+// Object handles
+typedef void* IUser_Handle;
+
+// IUser interface
+IUser_Handle IUser_Create();
+void IUser_Release(IUser_Handle handle);
+
+// Properties
+const char* IUser_GetName(IUser_Handle handle);
+void IUser_SetName(IUser_Handle handle, const char* value);
+int32_t IUser_GetAge(IUser_Handle handle);
+
+// Methods
+void IUser_UpdateProfile(IUser_Handle handle, const char* name, int32_t age);
+
+// Array handling
+size_t IUser_GetTags_Count(IUser_Handle handle);
+const char* IUser_GetTags_Item(IUser_Handle handle, size_t index);
+
+#ifdef __cplusplus
 }
+#endif
 ```
