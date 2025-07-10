@@ -1,0 +1,1 @@
+"""MinimIDL test suite."""

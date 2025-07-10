@@ -1,0 +1,93 @@
+// MinimIDL Grammar Definition
+// A modern Interface Definition Language without Microsoft COM/OLE complexity
+
+// Entry point
+start: namespace_decl*
+
+// Namespace declaration
+namespace_decl: "namespace" IDENTIFIER "{" namespace_body "}"
+
+namespace_body: (interface_decl 
+               | enum_decl 
+               | typedef_decl 
+               | const_decl
+               | forward_decl)*
+
+// Forward declaration
+forward_decl: "interface" IDENTIFIER ";"
+
+// Interface declaration
+interface_decl: "interface" IDENTIFIER "{" interface_member* "}"
+
+interface_member: property_decl | method_decl
+
+// Property declaration
+property_decl: type_spec IDENTIFIER writable? ";"
+writable: "writable"
+
+// Method declaration
+method_decl: type_spec IDENTIFIER "(" parameter_list? ")" ";"
+
+parameter_list: parameter ("," parameter)*
+parameter: type_spec IDENTIFIER
+
+// Enum declaration
+enum_decl: "enum" IDENTIFIER ":" primitive_type "{" enum_member_list? "}"
+
+enum_member_list: enum_member ("," enum_member)* ","?
+enum_member: IDENTIFIER "=" expression
+
+// Typedef declaration
+typedef_decl: "typedef" type_spec IDENTIFIER ";"
+
+// Constant declaration
+const_decl: "const" primitive_type IDENTIFIER "=" expression ";"
+
+// Type specifications
+type_spec: nullable_type | non_nullable_type
+
+nullable_type: non_nullable_type "?"
+
+non_nullable_type: array_type | dict_type | set_type | basic_type
+
+array_type: basic_type "[" "]"
+dict_type: "dict" "<" basic_type "," type_spec ">"
+set_type: "set" "<" basic_type ">"
+
+basic_type: primitive_type | string_type | IDENTIFIER
+
+primitive_type: "bool" | "int32_t" | "int64_t" | "float" | "double"
+string_type: "string_t"
+
+// Expressions (for constants and enum values)
+expression: or_expr
+
+or_expr: and_expr ("|" and_expr)*
+and_expr: shift_expr ("&" shift_expr)*
+shift_expr: add_expr (("<<" | ">>") add_expr)*
+add_expr: mul_expr (("+" | "-") mul_expr)*
+mul_expr: unary_expr (("*" | "/" | "%") unary_expr)*
+
+unary_expr: ("+" | "-" | "~")? primary_expr
+
+primary_expr: number 
+            | IDENTIFIER 
+            | "(" expression ")"
+
+// Literals
+number: DECIMAL_NUMBER | HEX_NUMBER | BINARY_NUMBER
+
+// Comments (ignored)
+COMMENT: "//" /[^\n]*/
+
+// Tokens
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+HEX_NUMBER: /0[xX][0-9a-fA-F]+/
+BINARY_NUMBER: /0[bB][01]+/
+DECIMAL_NUMBER: /(?!0[xXbB])(0|[1-9][0-9]*)/
+
+// Whitespace (ignored)
+%import common.WS
+%ignore WS
+%ignore COMMENT
