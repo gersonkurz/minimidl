@@ -172,4 +172,4 @@ class CppGenerator(BaseGenerator):
         Returns:
             Output filename
         """
-        return f"{namespace_name.lower()}.hpp"
+        return f"{namespace_name}.hpp"

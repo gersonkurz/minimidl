@@ -68,6 +68,11 @@ class CppWorkflow:
         readme_path = self._write_file(project_dir / "README.md", readme_content)
         generated_files.append(readme_path)
 
+        # Generate minimidl_runtime.hpp
+        runtime_content = self._generate_runtime_header()
+        runtime_path = self._write_file(include_dir / "minimidl_runtime.hpp", runtime_content)
+        generated_files.append(runtime_path)
+
         # Generate example code
         example_content = self._generate_example(project_name or "Generated", idl_file)
         example_path = self._write_file(src_dir / "example.cpp", example_content)
@@ -139,32 +144,13 @@ install(TARGETS ${{PROJECT_NAME}}_interface
     INCLUDES DESTINATION include
 )
 
-# Export targets
-install(EXPORT ${{PROJECT_NAME}}Targets
-    FILE ${{PROJECT_NAME}}Targets.cmake
-    NAMESPACE ${{PROJECT_NAME}}::
-    DESTINATION lib/cmake/${{PROJECT_NAME}}
-)
-
-# Generate package config files
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-    "${{CMAKE_CURRENT_BINARY_DIR}}/${{PROJECT_NAME}}ConfigVersion.cmake"
-    VERSION ${{PROJECT_VERSION}}
-    COMPATIBILITY AnyNewerVersion
-)
-
-configure_file(
-    "${{CMAKE_CURRENT_SOURCE_DIR}}/cmake/${{PROJECT_NAME}}Config.cmake.in"
-    "${{CMAKE_CURRENT_BINARY_DIR}}/${{PROJECT_NAME}}Config.cmake"
-    @ONLY
-)
-
-install(FILES
-    "${{CMAKE_CURRENT_BINARY_DIR}}/${{PROJECT_NAME}}Config.cmake"
-    "${{CMAKE_CURRENT_BINARY_DIR}}/${{PROJECT_NAME}}ConfigVersion.cmake"
-    DESTINATION lib/cmake/${{PROJECT_NAME}}
-)
+# Optional: Export targets for find_package support
+# Uncomment the following lines if you want to install this as a library
+# install(EXPORT ${{PROJECT_NAME}}Targets
+#     FILE ${{PROJECT_NAME}}Targets.cmake
+#     NAMESPACE ${{PROJECT_NAME}}::
+#     DESTINATION lib/cmake/${{PROJECT_NAME}}
+# )
 """
 
     def _generate_readme(self, project_name: str, idl_file: IDLFile) -> str:
@@ -255,18 +241,15 @@ This code was automatically generated. Do not edit manually.
         for namespace in idl_file.namespaces:
             includes.append(f'#include "{namespace.name}.hpp"')
 
-            # Generate example for first interface
-            if namespace.interfaces:
-                iface = namespace.interfaces[0]
-                class_name = iface.name[1:] if iface.name.startswith("I") else iface.name
+            # Generate example comment for interfaces
+            for iface in namespace.interfaces:
                 code_examples.append(
                     f"""
-    // Example using {namespace.name}::{iface.name}
-    auto instance = std::make_shared<{namespace.name}::{class_name}Impl>();
-    
-    // Call methods
-    // TODO: Add your implementation here
-    std::cout << "Created {namespace.name}::{iface.name} instance\\n";"""
+    // TODO: Implement {namespace.name}::{iface.name}
+    // Example:
+    // class {iface.name[1:] if iface.name.startswith("I") else iface.name}Impl : public {namespace.name}::{iface.name} {{
+    //     // Implement all pure virtual methods
+    // }};"""
                 )
 
         includes_str = "\n".join(includes)
@@ -374,6 +357,53 @@ echo -e "${GREEN}Build complete!${NC}"
 echo ""
 echo "To run the example:"
 echo "  ./build/example"
+"""
+
+    def _generate_runtime_header(self) -> str:
+        """Generate minimidl_runtime.hpp content."""
+        return """#pragma once
+// MinimIDL Runtime Support Library
+// This header provides base classes and utilities for generated code
+
+#include <string>
+#include <vector>
+#include <memory>
+#include <unordered_map>
+#include <atomic>
+
+namespace minimidl {
+
+// Base class for reference counted objects
+class RefCounted {
+protected:
+    mutable std::atomic<int32_t> m_refCount{1};
+    
+public:
+    virtual ~RefCounted() = default;
+    
+    void AddRef() const {
+        m_refCount.fetch_add(1, std::memory_order_relaxed);
+    }
+    
+    void Release() const {
+        if (m_refCount.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+            delete this;
+        }
+    }
+};
+
+// String type for IDL compatibility
+using string_t = std::string;
+
+// Array type template
+template<typename T>
+using array_t = std::vector<T>;
+
+// Dictionary type template
+template<typename K, typename V>
+using dict_t = std::unordered_map<K, V>;
+
+} // namespace minimidl
 """
 
     def _write_file(self, path: Path, content: str) -> Path:

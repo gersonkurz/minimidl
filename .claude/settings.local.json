@@ -38,7 +38,10 @@
       "Bash(.venv/bin/pytest tests/ --cov=minimidl -q)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(rm:*)",
+      "Bash(cmake:*)",
+      "Bash(./examples/TaskManager/build/example)"
     ],
     "deny": []
   }
