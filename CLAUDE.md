@@ -1,107 +1,67 @@
 
-## Task 5: Swift Binding Generator
+## Task 6: CLI Interface and User Experience
 
 ### Objective
-Implement the Swift binding generator that creates native Swift APIs with proper type mapping and Swift Package Manager integration.
+Implement the complete CLI interface with Typer, user experience workflows, and output project generation.
 
 ### Prerequisites
-- Task 4 completed successfully
-- C wrapper generation working properly
+- Tasks 1-5 completed successfully
+- All generators working properly
 
 ### Deliverables
 
-**1. Swift Generator**
+**1. CLI Implementation**
 ```
-minimidl/generators/
-└── swift.py                 # Swift binding generator
-```
-
-**2. Swift Templates**
-```
-minimidl/templates/swift/
-├── Package.swift.j2         # Swift Package Manager configuration
-├── wrapper.swift.j2         # Swift wrapper classes
-├── Types.swift.j2           # Swift type definitions
-├── module.modulemap.j2      # C module mapping
-└── README.md.j2             # Swift package documentation
+minimidl/
+├── cli.py                   # Complete Typer CLI interface
+└── workflows/
+    ├── __init__.py
+    ├── cpp_workflow.py      # C++ project generation
+    └── swift_workflow.py    # Swift project generation
 ```
 
-**3. Swift Code Generation**
-- Native Swift class generation
-- Type mapping (C types → Swift types)
-- Optional type handling (nullable → Swift optionals)
-- Array/Dictionary bridging
-- ARC integration with C++ refcounting
-- Error handling with Swift patterns
+**2. CLI Commands**
+- Primary generation commands (--target cpp/swift/all)
+- AST caching commands (--cache-ast, --from-ast)
+- Configuration options (--enum-class, --output, --verbose)
+- Help and version information
 
-**4. Swift Package Manager Integration**
-- Complete Package.swift configuration
-- C module wrapping
-- Target dependencies
-- Build configuration
+**3. User Experience Workflows**
+- Complete project structure generation
+- Buildable output with no manual intervention
+- Professional project organization
+- Clear instructions and README files
 
-**5. Swift Test Generation**
-```
-minimidl/templates/swift/
-├── BasicTests.swift.j2      # Unit tests for generated code
-└── IntegrationTests.swift.j2 # Integration tests
-```
+**4. Error Handling and Validation**
+- Comprehensive input validation
+- Clear error messages with suggestions
+- Graceful handling of edge cases
+- Detailed logging with loguru
+
+**5. Integration Testing**
+- End-to-end workflow tests
+- Generated code compilation tests
+- Cross-platform compatibility tests
 
 ### Success Criteria
-- Generated Swift code compiles without warnings
-- Native Swift API experience (no C interop visible)
-- Proper Swift optionals handling
-- Clean memory management (ARC + refcounting)
-- Complete SPM package structure
-- Comprehensive test coverage
+- Single command generates complete, buildable projects
+- Professional output suitable for production use
+- Comprehensive error handling and user guidance
+- Clean CLI interface with intuitive commands
+- All output projects compile and run successfully
 
-### Example Generated Swift API
-```swift
-// Generated from TestAPI.idl
-import Foundation
+### Example CLI Usage
+```bash
+# Generate C++ project
+minimidl --target cpp --output ./my_cpp_api myapi.idl
 
-public class User {
-    private let handle: OpaquePointer
-    
-    public init() {
-        self.handle = IUser_Create()
-    }
-    
-    deinit {
-        IUser_Release(handle)
-    }
-    
-    // Properties
-    public var name: String {
-        get {
-            let cString = IUser_GetName(handle)
-            return cString != nil ? String(cString: cString!) : ""
-        }
-        set {
-            IUser_SetName(handle, newValue)
-        }
-    }
-    
-    public var age: Int32 {
-        get {
-            return IUser_GetAge(handle)
-        }
-    }
-    
-    // Methods
-    public func updateProfile(name: String, age: Int32) {
-        IUser_UpdateProfile(handle, name, age)
-    }
-    
-    public func getTags() -> [String] {
-        let count = IUser_GetTags_Count(handle)
-        var result: [String] = []
-        for i in 0..<count {
-            if let cString = IUser_GetTags_Item(handle, i) {
-                result.append(String(cString: cString))
-            }
-        }
-        return result
-    }
-}
+# Generate Swift project
+minimidl --target swift --output ./my_swift_api myapi.idl
+
+# Generate all targets
+minimidl --target all --output ./my_api myapi.idl
+
+# Use AST caching for large projects
+minimidl --cache-ast --ast-file myapi.ast myapi.idl
+minimidl --from-ast myapi.ast --target cpp --output ./cpp_api
 ```
