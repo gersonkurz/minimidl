@@ -10,6 +10,72 @@
 #include <memory>
 #include <cstring>
 #include <thread>
+#include <atomic>
+
+// Core interfaces
+class IRefCounted {
+public:
+    virtual ~IRefCounted() = default;
+    virtual void AddRef() = 0;
+    virtual void Release() = 0;
+};
+
+class IDynamicString : public IRefCounted {
+public:
+    virtual const char* GetValue() const = 0;
+    virtual void SetValue(const char* value) = 0;
+    virtual size_t GetLength() const = 0;
+};
+
+// Reference counting template
+template <typename T>
+class RefCounted : public T {
+public:
+    RefCounted() : m_refCount{1} {}
+    
+    void AddRef() override final {
+        ++m_refCount;
+    }
+    
+    void Release() override final {
+        if (--m_refCount == 0) {
+            delete this;
+        }
+    }
+
+private:
+    mutable std::atomic<int32_t> m_refCount;
+};
+
+// Concrete string implementation
+class DynamicString : public RefCounted<IDynamicString> {
+private:
+    std::string m_value;
+    
+public:
+    explicit DynamicString(const char* value = nullptr) {
+        if (value) {
+            m_value = value;
+        }
+    }
+    
+    const char* GetValue() const override { 
+        return m_value.c_str(); 
+    }
+    
+    void SetValue(const char* value) override { 
+        m_value = value ? value : ""; 
+    }
+    
+    size_t GetLength() const override { 
+        return m_value.length(); 
+    }
+};
+
+// Factory function
+IDynamicString* CreateDynamicString(const char* value = nullptr) {
+    return new DynamicString(value);
+}
 
 namespace {
     thread_local std::string g_lastError;
@@ -38,6 +104,83 @@ const char* TaskManager_GetLastError() {
 
 void TaskManager_ClearError() {
     g_lastError.clear();
+}
+
+// IDynamicString C API implementation
+IDynamicString_Handle IDynamicString_Create(const char* value) {
+    try {
+        return PtrToHandle(CreateDynamicString(value));
+    } catch (const std::exception& e) {
+        SetError(e.what());
+        return nullptr;
+    }
+}
+
+void IDynamicString_AddRef(IDynamicString_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return;
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        str->AddRef();
+    } catch (const std::exception& e) {
+        SetError(e.what());
+    }
+}
+
+void IDynamicString_Release(IDynamicString_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return;
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        str->Release();
+    } catch (const std::exception& e) {
+        SetError(e.what());
+    }
+}
+
+const char* IDynamicString_GetValue(IDynamicString_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return "";
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        return str->GetValue();
+    } catch (const std::exception& e) {
+        SetError(e.what());
+        return "";
+    }
+}
+
+size_t IDynamicString_GetLength(IDynamicString_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return 0;
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        return str->GetLength();
+    } catch (const std::exception& e) {
+        SetError(e.what());
+        return 0;
+    }
+}
+
+void IDynamicString_SetValue(IDynamicString_Handle handle, const char* value) {
+    if (!handle) {
+        SetError("Null handle");
+        return;
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        str->SetValue(value);
+    } catch (const std::exception& e) {
+        SetError(e.what());
+    }
 }
 
 // ITask implementation
@@ -77,18 +220,17 @@ void ITask_AddRef(ITask_Handle handle) {
 }
 
 // Property: id
-const char* ITask_Getid(ITask_Handle handle) {
+IDynamicString_Handle ITask_Getid(ITask_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_id();
-        return result.c_str();
+        std::string result = obj->get_id();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
@@ -97,18 +239,17 @@ const char* ITask_Getid(ITask_Handle handle) {
 
 
 // Property: title
-const char* ITask_Gettitle(ITask_Handle handle) {
+IDynamicString_Handle ITask_Gettitle(ITask_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_title();
-        return result.c_str();
+        std::string result = obj->get_title();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
@@ -117,18 +258,17 @@ const char* ITask_Gettitle(ITask_Handle handle) {
 
 
 // Property: created_at
-const char* ITask_Getcreated_at(ITask_Handle handle) {
+IDynamicString_Handle ITask_Getcreated_at(ITask_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_created_at();
-        return result.c_str();
+        std::string result = obj->get_created_at();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
@@ -137,25 +277,24 @@ const char* ITask_Getcreated_at(ITask_Handle handle) {
 
 
 // Property: description
-const char* ITask_Getdescription(ITask_Handle handle) {
+IDynamicString_Handle ITask_Getdescription(ITask_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_description();
-        return result.c_str();
+        std::string result = obj->get_description();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
     }
 }
 
-void ITask_Setdescription(ITask_Handle handle, const char* value) {
+void ITask_Setdescription(ITask_Handle handle, IDynamicString_Handle value) {
     if (!handle) {
         SetError("Null handle");
         return;
@@ -166,7 +305,8 @@ void ITask_Setdescription(ITask_Handle handle, const char* value) {
     }
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
-        obj->set_description(value);
+        auto* str = HandleToPtr<IDynamicString>(value);
+        obj->set_description(str->GetValue());
     } catch (const std::exception& e) {
         SetError(e.what());
     }
@@ -229,25 +369,24 @@ void ITask_Setstatus(ITask_Handle handle, Status value) {
 }
 
 // Property: due_date
-const char* ITask_Getdue_date(ITask_Handle handle) {
+IDynamicString_Handle ITask_Getdue_date(ITask_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_due_date();
-        return result.c_str();
+        std::string result = obj->get_due_date();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
     }
 }
 
-void ITask_Setdue_date(ITask_Handle handle, const char* value) {
+void ITask_Setdue_date(ITask_Handle handle, IDynamicString_Handle value) {
     if (!handle) {
         SetError("Null handle");
         return;
@@ -258,7 +397,8 @@ void ITask_Setdue_date(ITask_Handle handle, const char* value) {
     }
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
-        obj->set_due_date(value);
+        auto* str = HandleToPtr<IDynamicString>(value);
+        obj->set_due_date(str->GetValue());
     } catch (const std::exception& e) {
         SetError(e.what());
     }
@@ -279,7 +419,7 @@ size_t ITask_Gettags_Count(ITask_Handle handle) {
     }
 }
 
-const char* ITask_Gettags_Item(ITask_Handle handle, size_t index) {
+IDynamicString_Handle ITask_Gettags_Item(ITask_Handle handle, size_t index) {
     if (!handle) {
         SetError("Null handle");
         return {};
@@ -291,9 +431,9 @@ const char* ITask_Gettags_Item(ITask_Handle handle, size_t index) {
             SetError("Index out of bounds");
             return {};
         }
-        static thread_local std::string result;
-        result = array[index];
-        return result.c_str();
+        std::string str = array[index];
+        IDynamicString* dynStr = CreateDynamicString(str.c_str());
+        return PtrToHandle(dynStr);
     } catch (const std::exception& e) {
         SetError(e.what());
         return {};
@@ -313,15 +453,20 @@ void ITask_Settags_Clear(ITask_Handle handle) {
     }
 }
 
-void ITask_Settags_Add(ITask_Handle handle, const char* value) {
+void ITask_Settags_Add(ITask_Handle handle, IDynamicString_Handle value) {
     if (!handle) {
         SetError("Null handle");
+        return;
+    }
+    if (!value) {
+        SetError("Null value");
         return;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
         auto array = obj->get_tags();
-        array.push_back(value);
+        auto* str = HandleToPtr<IDynamicString>(value);
+        array.push_back(str->GetValue());
         obj->set_tags(array);
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -398,7 +543,7 @@ TaskManagerDict_Handle ITask_GetMetadata(
 
 // Method: SetMetadata
 void ITask_SetMetadata(
-    ITask_Handle handle, const char* key, const char* value) {
+    ITask_Handle handle, IDynamicString_Handle key, IDynamicString_Handle value) {
     if (!handle) {
         SetError("Null handle");
         return;
@@ -406,7 +551,7 @@ void ITask_SetMetadata(
     try {
         auto* obj = HandleToPtr<TaskManager::ITask>(handle);
         obj->SetMetadata(
-key, value);
+HandleToPtr<IDynamicString>(key)->GetValue(), HandleToPtr<IDynamicString>(value)->GetValue());
     } catch (const std::exception& e) {
         SetError(e.what());
     }
@@ -449,18 +594,17 @@ void IProject_AddRef(IProject_Handle handle) {
 }
 
 // Property: id
-const char* IProject_Getid(IProject_Handle handle) {
+IDynamicString_Handle IProject_Getid(IProject_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::IProject>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_id();
-        return result.c_str();
+        std::string result = obj->get_id();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
@@ -469,25 +613,24 @@ const char* IProject_Getid(IProject_Handle handle) {
 
 
 // Property: name
-const char* IProject_Getname(IProject_Handle handle) {
+IDynamicString_Handle IProject_Getname(IProject_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::IProject>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_name();
-        return result.c_str();
+        std::string result = obj->get_name();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
     }
 }
 
-void IProject_Setname(IProject_Handle handle, const char* value) {
+void IProject_Setname(IProject_Handle handle, IDynamicString_Handle value) {
     if (!handle) {
         SetError("Null handle");
         return;
@@ -498,32 +641,32 @@ void IProject_Setname(IProject_Handle handle, const char* value) {
     }
     try {
         auto* obj = HandleToPtr<TaskManager::IProject>(handle);
-        obj->set_name(value);
+        auto* str = HandleToPtr<IDynamicString>(value);
+        obj->set_name(str->GetValue());
     } catch (const std::exception& e) {
         SetError(e.what());
     }
 }
 
 // Property: description
-const char* IProject_Getdescription(IProject_Handle handle) {
+IDynamicString_Handle IProject_Getdescription(IProject_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<TaskManager::IProject>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_description();
-        return result.c_str();
+        std::string result = obj->get_description();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
     }
 }
 
-void IProject_Setdescription(IProject_Handle handle, const char* value) {
+void IProject_Setdescription(IProject_Handle handle, IDynamicString_Handle value) {
     if (!handle) {
         SetError("Null handle");
         return;
@@ -534,7 +677,8 @@ void IProject_Setdescription(IProject_Handle handle, const char* value) {
     }
     try {
         auto* obj = HandleToPtr<TaskManager::IProject>(handle);
-        obj->set_description(value);
+        auto* str = HandleToPtr<IDynamicString>(value);
+        obj->set_description(str->GetValue());
     } catch (const std::exception& e) {
         SetError(e.what());
     }
@@ -570,7 +714,7 @@ void IProject_Setactive(IProject_Handle handle, bool value) {
 
 // Method: CreateTask
 ITask_Handle IProject_CreateTask(
-    IProject_Handle handle, const char* title, const char* description) {
+    IProject_Handle handle, IDynamicString_Handle title, IDynamicString_Handle description) {
     if (!handle) {
         SetError("Null handle");
         return {};
@@ -578,7 +722,7 @@ ITask_Handle IProject_CreateTask(
     try {
         auto* obj = HandleToPtr<TaskManager::IProject>(handle);
         auto result = obj->CreateTask(
-title, description);
+HandleToPtr<IDynamicString>(title)->GetValue(), HandleToPtr<IDynamicString>(description)->GetValue());
         return PtrToHandle(result.get());
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -588,7 +732,7 @@ title, description);
 
 // Method: GetTask
 ITask_Handle IProject_GetTask(
-    IProject_Handle handle, const char* taskId) {
+    IProject_Handle handle, IDynamicString_Handle taskId) {
     if (!handle) {
         SetError("Null handle");
         return {};
@@ -596,7 +740,7 @@ ITask_Handle IProject_GetTask(
     try {
         auto* obj = HandleToPtr<TaskManager::IProject>(handle);
         auto result = obj->GetTask(
-taskId);
+HandleToPtr<IDynamicString>(taskId)->GetValue());
         return PtrToHandle(result.get());
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -642,7 +786,7 @@ static_cast<TaskManager::Status>(status));
 
 // Method: DeleteTask
 bool IProject_DeleteTask(
-    IProject_Handle handle, const char* taskId) {
+    IProject_Handle handle, IDynamicString_Handle taskId) {
     if (!handle) {
         SetError("Null handle");
         return {};
@@ -650,7 +794,7 @@ bool IProject_DeleteTask(
     try {
         auto* obj = HandleToPtr<TaskManager::IProject>(handle);
         auto result = obj->DeleteTask(
-taskId);
+HandleToPtr<IDynamicString>(taskId)->GetValue());
         return result;
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -750,7 +894,7 @@ void ITaskManager_AddRef(ITaskManager_Handle handle) {
 
 // Method: CreateProject
 IProject_Handle ITaskManager_CreateProject(
-    ITaskManager_Handle handle, const char* name) {
+    ITaskManager_Handle handle, IDynamicString_Handle name) {
     if (!handle) {
         SetError("Null handle");
         return {};
@@ -758,7 +902,7 @@ IProject_Handle ITaskManager_CreateProject(
     try {
         auto* obj = HandleToPtr<TaskManager::ITaskManager>(handle);
         auto result = obj->CreateProject(
-name);
+HandleToPtr<IDynamicString>(name)->GetValue());
         return PtrToHandle(result.get());
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -768,7 +912,7 @@ name);
 
 // Method: GetProject
 IProject_Handle ITaskManager_GetProject(
-    ITaskManager_Handle handle, const char* projectId) {
+    ITaskManager_Handle handle, IDynamicString_Handle projectId) {
     if (!handle) {
         SetError("Null handle");
         return {};
@@ -776,7 +920,7 @@ IProject_Handle ITaskManager_GetProject(
     try {
         auto* obj = HandleToPtr<TaskManager::ITaskManager>(handle);
         auto result = obj->GetProject(
-projectId);
+HandleToPtr<IDynamicString>(projectId)->GetValue());
         return PtrToHandle(result.get());
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -822,7 +966,7 @@ TaskManagerArray_Handle ITaskManager_GetActiveProjects(
 
 // Method: DeleteProject
 bool ITaskManager_DeleteProject(
-    ITaskManager_Handle handle, const char* projectId) {
+    ITaskManager_Handle handle, IDynamicString_Handle projectId) {
     if (!handle) {
         SetError("Null handle");
         return {};
@@ -830,7 +974,7 @@ bool ITaskManager_DeleteProject(
     try {
         auto* obj = HandleToPtr<TaskManager::ITaskManager>(handle);
         auto result = obj->DeleteProject(
-projectId);
+HandleToPtr<IDynamicString>(projectId)->GetValue());
         return result;
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -840,7 +984,7 @@ projectId);
 
 // Method: SearchTasks
 TaskManagerArray_Handle ITaskManager_SearchTasks(
-    ITaskManager_Handle handle, const char* query) {
+    ITaskManager_Handle handle, IDynamicString_Handle query) {
     if (!handle) {
         SetError("Null handle");
         return {};
@@ -848,7 +992,7 @@ TaskManagerArray_Handle ITaskManager_SearchTasks(
     try {
         auto* obj = HandleToPtr<TaskManager::ITaskManager>(handle);
         auto result = obj->SearchTasks(
-query);
+HandleToPtr<IDynamicString>(query)->GetValue());
         return result;
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -928,7 +1072,7 @@ settings);
 
 // Method: Save
 void ITaskManager_Save(
-    ITaskManager_Handle handle, const char* path) {
+    ITaskManager_Handle handle, IDynamicString_Handle path) {
     if (!handle) {
         SetError("Null handle");
         return;
@@ -936,7 +1080,7 @@ void ITaskManager_Save(
     try {
         auto* obj = HandleToPtr<TaskManager::ITaskManager>(handle);
         obj->Save(
-path);
+HandleToPtr<IDynamicString>(path)->GetValue());
     } catch (const std::exception& e) {
         SetError(e.what());
     }
@@ -944,7 +1088,7 @@ path);
 
 // Method: Load
 void ITaskManager_Load(
-    ITaskManager_Handle handle, const char* path) {
+    ITaskManager_Handle handle, IDynamicString_Handle path) {
     if (!handle) {
         SetError("Null handle");
         return;
@@ -952,7 +1096,7 @@ void ITaskManager_Load(
     try {
         auto* obj = HandleToPtr<TaskManager::ITaskManager>(handle);
         obj->Load(
-path);
+HandleToPtr<IDynamicString>(path)->GetValue());
     } catch (const std::exception& e) {
         SetError(e.what());
     }

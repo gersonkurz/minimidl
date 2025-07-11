@@ -10,6 +10,72 @@
 #include <memory>
 #include <cstring>
 #include <thread>
+#include <atomic>
+
+// Core interfaces
+class IRefCounted {
+public:
+    virtual ~IRefCounted() = default;
+    virtual void AddRef() = 0;
+    virtual void Release() = 0;
+};
+
+class IDynamicString : public IRefCounted {
+public:
+    virtual const char* GetValue() const = 0;
+    virtual void SetValue(const char* value) = 0;
+    virtual size_t GetLength() const = 0;
+};
+
+// Reference counting template
+template <typename T>
+class RefCounted : public T {
+public:
+    RefCounted() : m_refCount{1} {}
+    
+    void AddRef() override final {
+        ++m_refCount;
+    }
+    
+    void Release() override final {
+        if (--m_refCount == 0) {
+            delete this;
+        }
+    }
+
+private:
+    mutable std::atomic<int32_t> m_refCount;
+};
+
+// Concrete string implementation
+class DynamicString : public RefCounted<IDynamicString> {
+private:
+    std::string m_value;
+    
+public:
+    explicit DynamicString(const char* value = nullptr) {
+        if (value) {
+            m_value = value;
+        }
+    }
+    
+    const char* GetValue() const override { 
+        return m_value.c_str(); 
+    }
+    
+    void SetValue(const char* value) override { 
+        m_value = value ? value : ""; 
+    }
+    
+    size_t GetLength() const override { 
+        return m_value.length(); 
+    }
+};
+
+// Factory function
+IDynamicString* CreateDynamicString(const char* value = nullptr) {
+    return new DynamicString(value);
+}
 
 namespace {
     thread_local std::string g_lastError;
@@ -38,6 +104,83 @@ const char* {{ namespace.name }}_GetLastError() {
 
 void {{ namespace.name }}_ClearError() {
     g_lastError.clear();
+}
+
+// IDynamicString C API implementation
+IDynamicString_Handle IDynamicString_Create(const char* value) {
+    try {
+        return PtrToHandle(CreateDynamicString(value));
+    } catch (const std::exception& e) {
+        SetError(e.what());
+        return nullptr;
+    }
+}
+
+void IDynamicString_AddRef(IDynamicString_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return;
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        str->AddRef();
+    } catch (const std::exception& e) {
+        SetError(e.what());
+    }
+}
+
+void IDynamicString_Release(IDynamicString_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return;
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        str->Release();
+    } catch (const std::exception& e) {
+        SetError(e.what());
+    }
+}
+
+const char* IDynamicString_GetValue(IDynamicString_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return "";
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        return str->GetValue();
+    } catch (const std::exception& e) {
+        SetError(e.what());
+        return "";
+    }
+}
+
+size_t IDynamicString_GetLength(IDynamicString_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return 0;
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        return str->GetLength();
+    } catch (const std::exception& e) {
+        SetError(e.what());
+        return 0;
+    }
+}
+
+void IDynamicString_SetValue(IDynamicString_Handle handle, const char* value) {
+    if (!handle) {
+        SetError("Null handle");
+        return;
+    }
+    try {
+        auto* str = HandleToPtr<IDynamicString>(handle);
+        str->SetValue(value);
+    } catch (const std::exception& e) {
+        SetError(e.what());
+    }
 }
 
 {% for interface in namespace.interfaces %}
@@ -98,18 +241,17 @@ void {{ interface.name }}_AddRef({{ interface.name }}_Handle handle) {
     }
 }
 {% elif property.type | is_string %}
-const char* {{ interface.name | c_function_name(property.name, "Get") }}({{ interface.name }}_Handle handle) {
+IDynamicString_Handle {{ interface.name | c_function_name(property.name, "Get") }}({{ interface.name }}_Handle handle) {
     if (!handle) {
         SetError("Null handle");
         return nullptr;
     }
     try {
         auto* obj = HandleToPtr<{{ namespace.name }}::{{ interface.name }}>(handle);
-        // Note: This returns a pointer to internal string data
-        // In production, you'd need proper lifetime management
-        static thread_local std::string result;
-        result = obj->get_{{ property.name }}();
-        return result.c_str();
+        std::string result = obj->get_{{ property.name }}();
+        // Create new IDynamicString with refcount=1
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
@@ -143,9 +285,11 @@ size_t {{ interface.name | c_function_name(property.name + "_Count", "Get") }}({
             return {};
         }
         {% if property.type.element_type | is_string %}
-        static thread_local std::string result;
-        result = array[index];
-        return result.c_str();
+        std::string str = array[index];
+        IDynamicString* dynStr = CreateDynamicString(str.c_str());
+        return PtrToHandle(dynStr);
+        {% elif property.type.element_type | is_enum %}
+        return static_cast<{{ property.type.element_type | c_type }}>(array[index]);
         {% else %}
         return array[index];
         {% endif %}
@@ -184,7 +328,7 @@ size_t {{ interface.name | c_function_name(property.name + "_Count", "Get") }}({
 
 {% if property.writable %}
 {% if property.type | is_string %}
-void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.name }}_Handle handle, const char* value) {
+void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.name }}_Handle handle, IDynamicString_Handle value) {
     if (!handle) {
         SetError("Null handle");
         return;
@@ -195,7 +339,8 @@ void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.n
     }
     try {
         auto* obj = HandleToPtr<{{ namespace.name }}::{{ interface.name }}>(handle);
-        obj->set_{{ property.name }}(value);
+        auto* str = HandleToPtr<IDynamicString>(value);
+        obj->set_{{ property.name }}(str->GetValue());
     } catch (const std::exception& e) {
         SetError(e.what());
     }
@@ -219,10 +364,23 @@ void {{ interface.name | c_function_name(property.name + "_Add", "Set") }}({{ in
         SetError("Null handle");
         return;
     }
+    {% if property.type.element_type | is_string %}
+    if (!value) {
+        SetError("Null value");
+        return;
+    }
+    {% endif %}
     try {
         auto* obj = HandleToPtr<{{ namespace.name }}::{{ interface.name }}>(handle);
         auto array = obj->get_{{ property.name }}();
+        {% if property.type.element_type | is_string %}
+        auto* str = HandleToPtr<IDynamicString>(value);
+        array.push_back(str->GetValue());
+        {% elif property.type.element_type | is_enum %}
+        array.push_back(static_cast<{{ namespace.name }}::{{ property.type.element_type.name }}>(value));
+        {% else %}
         array.push_back(value);
+        {% endif %}
         obj->set_{{ property.name }}(array);
     } catch (const std::exception& e) {
         SetError(e.what());
@@ -282,6 +440,8 @@ void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.n
             {%- if not loop.first %}, {% endif -%}
             {%- if param.type | is_enum -%}
             static_cast<{{ namespace.name }}::{{ param.type.name }}>({{ param.name }})
+            {%- elif param.type | is_string -%}
+            HandleToPtr<IDynamicString>({{ param.name }})->GetValue()
             {%- else -%}
             {{ param.name }}
             {%- endif -%}
@@ -289,11 +449,12 @@ void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.n
         );
         {% if method.return_type.name != "void" %}
         {% if method.return_type | is_string %}
-        static thread_local std::string resultStr;
-        resultStr = result;
-        return resultStr.c_str();
+        IDynamicString* str = CreateDynamicString(result.c_str());
+        return PtrToHandle(str);
         {% elif method.return_type | is_interface %}
         return PtrToHandle(result.get());
+        {% elif method.return_type | is_enum %}
+        return static_cast<{{ method.return_type | c_type }}>(result);
         {% else %}
         return result;
         {% endif %}

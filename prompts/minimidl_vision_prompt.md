@@ -176,73 +176,171 @@ interface IManager {
 
 ## Code Generation Requirements
 
-### C++ Interface Generation
-- Pure virtual classes (no data members)
-- Abstract base classes with factory pattern
-- Namespace mapping from IDL
-- Header guards and proper includes
-- Clean, readable code formatting
+### Core Memory Management Principle
+**All objects that cross language boundaries MUST be reference counted.** This includes:
+- All user-defined interfaces
+- Strings (which are just interfaces that manage string memory)
+- Container objects (arrays, dictionaries, sets)
+- Any object returned from or passed to C/Swift bindings
 
-### C++ Helper Library (minimidl_runtime.hpp)
-**String handling:**
+### C++ Interface Generation
+
+#### Fundamental Base Interface
 ```cpp
-class IDynamicString {
+// The root of all interfaces - pure virtual
+class IRefCounted {
 public:
-    virtual ~IDynamicString() = default;
-    virtual void SetValue(const char* value) = 0;
-    virtual const char* GetValue() const = 0;
+    virtual ~IRefCounted() = default;
     virtual void AddRef() = 0;
     virtual void Release() = 0;
 };
+```
 
-// Helper implementation
-class string_t : public IDynamicString {
-    // std::string wrapper with refcounting
+#### Generated Interfaces
+- **ALL interfaces inherit from IRefCounted** (directly or indirectly)
+- Pure virtual classes only (no data members, no implementation)
+- Namespace mapping from IDL
+- Header guards and proper includes
+- Methods return interface pointers for all non-primitive types
+
+### C++ Helper Library (minimidl_runtime.hpp)
+
+#### Reference Counting Template
+```cpp
+// CRTP helper for implementing IRefCounted
+template <typename T>
+class RefCounted : public T {
+public:
+    RefCounted() : m_refCount{1} {}
+    
+    void AddRef() override final {
+        ++m_refCount;
+    }
+    
+    void Release() override final {
+        if (--m_refCount == 0) {
+            delete this;
+        }
+    }
+
+private:
+    mutable std::atomic<int32_t> m_refCount;
 };
 ```
 
-**Container abstractions:**
+#### String Interface and Implementation
 ```cpp
+// String is just another refcounted interface
+class IDynamicString : public IRefCounted {
+public:
+    virtual const char* GetValue() const = 0;
+    virtual void SetValue(const char* value) = 0;
+    virtual size_t GetLength() const = 0;
+};
+
+// Concrete implementation using the RefCounted template
+class DynamicString : public RefCounted<IDynamicString> {
+private:
+    std::string m_value;
+public:
+    const char* GetValue() const override { return m_value.c_str(); }
+    void SetValue(const char* value) override { m_value = value; }
+    size_t GetLength() const override { return m_value.length(); }
+};
+
+// Factory function
+IDynamicString* CreateDynamicString(const char* value = nullptr);
+```
+
+#### Container Interfaces
+```cpp
+// Arrays are refcounted interfaces too
 template<typename T>
-class array_t {
-    // Refcounted array container
+class IArray : public IRefCounted {
 public:
-    size_t size() const;
-    T& operator[](size_t index);
-    void push_back(const T& item);
-    // Iterator support
+    virtual size_t GetCount() const = 0;
+    virtual T* GetAt(size_t index) = 0;
+    virtual void Add(T* item) = 0;
+    virtual void RemoveAt(size_t index) = 0;
+    virtual void Clear() = 0;
 };
 
+// Dictionary interface
 template<typename K, typename V>
-class dict_t {
-    // Refcounted dictionary container
-};
-```
-
-**Refcounting base:**
-```cpp
-class RefCounted {
-protected:
-    std::atomic<int32_t> m_refCount{1};
+class IDictionary : public IRefCounted {
 public:
-    void AddRef();
-    void Release();
-    virtual ~RefCounted() = default;
+    virtual size_t GetCount() const = 0;
+    virtual V* Get(const K& key) = 0;
+    virtual void Set(const K& key, V* value) = 0;
+    virtual void Remove(const K& key) = 0;
+    virtual void Clear() = 0;
+    // Iterator support...
 };
 ```
 
 ### C Wrapper Generation
-- C-compatible function signatures
-- Proper error handling (return codes, not exceptions)
-- Memory management through refcounting
+
+#### Core Principles
+- **ALL string returns MUST be IDynamicString handles**, never `const char*`
+- Handle-based API (opaque pointers)
+- Consistent error handling through return codes
+- Reference counting exposed through C API
+
+#### Example C Wrapper Pattern
+```c
+// NEVER return const char* directly
+// BAD:  const char* ITask_GetId(ITask_Handle handle);
+// GOOD: IDynamicString_Handle ITask_GetId(ITask_Handle handle);
+
+// String access pattern
+IDynamicString_Handle str = ITask_GetId(task);
+const char* cstr = IDynamicString_GetValue(str);
+// ... use cstr ...
+IDynamicString_Release(str);  // Caller MUST release
+
+// All handles are refcounted
+void ITask_AddRef(ITask_Handle handle);
+void ITask_Release(ITask_Handle handle);
+```
+
+#### Memory Management Rules
+- Getters return new references (caller must release)
+- Setters take references without transferring ownership
+- Collections return enumeration handles, not raw pointers
 - Cross-platform compatibility (Windows .def files, macOS exports)
 
 ### Swift Binding Generation
-- Swift Package Manager integration
-- Native Swift types (String, Array, Dictionary)
-- Optional type mapping
-- ARC integration with C++ refcounting
-- Clean object-oriented Swift interfaces
+
+#### Swift Memory Management Integration
+- Swift wrapper classes hold C handle references
+- `deinit` calls the C Release function
+- String bridging creates Swift String from IDynamicString
+- Collections bridge to native Swift types
+
+#### Example Swift Pattern
+```swift
+public class Task {
+    private let handle: OpaquePointer
+    
+    init(handle: OpaquePointer) {
+        self.handle = handle
+        ITask_AddRef(handle)
+    }
+    
+    deinit {
+        ITask_Release(handle)
+    }
+    
+    var id: String {
+        let strHandle = ITask_GetId(handle)
+        defer { IDynamicString_Release(strHandle) }
+        return String(cString: IDynamicString_GetValue(strHandle))
+    }
+}
+```
+
+### Summary
+The key insight is that **reference counting is not a implementation detail, but the fundamental abstraction** that enables safe memory management across C++, C, and Swift. Every object that crosses language boundaries is refcounted, including strings, which are just specialized refcounted objects that manage string memory.
 
 ## User Experience Workflows
 

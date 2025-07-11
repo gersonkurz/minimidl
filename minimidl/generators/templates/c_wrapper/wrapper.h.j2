@@ -31,6 +31,9 @@ typedef enum {
     {{ namespace.name | upper }}_ERROR_NOT_IMPLEMENTED = -5,
 } {{ namespace.name }}_ErrorCode;
 
+// Core handles
+typedef void* IDynamicString_Handle;
+
 // Forward declarations
 {% for interface in namespace.interfaces %}
 typedef void* {{ interface.name }}_Handle;
@@ -57,13 +60,17 @@ typedef {{ enum.backing_type }} {{ enum.name }};
 
 {% for property in interface.properties %}
 // Property: {{ property.name }}
-{% if property.type | is_primitive %}
+{% if property.type | is_primitive or property.type | is_enum %}
 {{ namespace | export_macro }} {{ property.type | c_type }} {{ interface.name | c_function_name(property.name, "Get") }}({{ interface.name }}_Handle handle);
 {% elif property.type | is_string %}
-{{ namespace | export_macro }} const char* {{ interface.name | c_function_name(property.name, "Get") }}({{ interface.name }}_Handle handle);
+{{ namespace | export_macro }} IDynamicString_Handle {{ interface.name | c_function_name(property.name, "Get") }}({{ interface.name }}_Handle handle);
 {% elif property.type | is_array %}
 {{ namespace | export_macro }} size_t {{ interface.name | c_function_name(property.name + "_Count", "Get") }}({{ interface.name }}_Handle handle);
+{% if property.type.element_type | is_string %}
+{{ namespace | export_macro }} IDynamicString_Handle {{ interface.name | c_function_name(property.name + "_Item", "Get") }}({{ interface.name }}_Handle handle, size_t index);
+{% else %}
 {{ namespace | export_macro }} {{ property.type.element_type | c_type }} {{ interface.name | c_function_name(property.name + "_Item", "Get") }}({{ interface.name }}_Handle handle, size_t index);
+{% endif %}
 {% elif property.type | is_dict %}
 {{ namespace | export_macro }} size_t {{ interface.name | c_function_name(property.name + "_Count", "Get") }}({{ interface.name }}_Handle handle);
 {{ namespace | export_macro }} {{ namespace.name }}Dict_Handle {{ interface.name | c_function_name(property.name + "_Iterator", "Get") }}({{ interface.name }}_Handle handle);
@@ -75,10 +82,14 @@ typedef {{ enum.backing_type }} {{ enum.name }};
 {% endif %}
 {% if property.writable %}
 {% if property.type | is_string %}
-{{ namespace | export_macro }} void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.name }}_Handle handle, const char* value);
+{{ namespace | export_macro }} void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.name }}_Handle handle, IDynamicString_Handle value);
 {% elif property.type | is_array %}
 {{ namespace | export_macro }} void {{ interface.name | c_function_name(property.name + "_Clear", "Set") }}({{ interface.name }}_Handle handle);
+{% if property.type.element_type | is_string %}
+{{ namespace | export_macro }} void {{ interface.name | c_function_name(property.name + "_Add", "Set") }}({{ interface.name }}_Handle handle, IDynamicString_Handle value);
+{% else %}
 {{ namespace | export_macro }} void {{ interface.name | c_function_name(property.name + "_Add", "Set") }}({{ interface.name }}_Handle handle, {{ property.type.element_type | c_param_type }} value);
+{% endif %}
 {% else %}
 {{ namespace | export_macro }} void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.name }}_Handle handle, {{ property.type | c_param_type }} value);
 {% endif %}
@@ -109,6 +120,14 @@ typedef {{ enum.backing_type }} {{ enum.name }};
 {{ namespace | export_macro }} size_t {{ namespace.name }}Set_Count({{ namespace.name }}Set_Handle handle);
 {{ namespace | export_macro }} bool {{ namespace.name }}Set_Next({{ namespace.name }}Set_Handle handle, void** value);
 {{ namespace | export_macro }} void {{ namespace.name }}Set_Reset({{ namespace.name }}Set_Handle handle);
+
+// IDynamicString interface
+{{ namespace | export_macro }} IDynamicString_Handle IDynamicString_Create(const char* value);
+{{ namespace | export_macro }} void IDynamicString_AddRef(IDynamicString_Handle handle);
+{{ namespace | export_macro }} void IDynamicString_Release(IDynamicString_Handle handle);
+{{ namespace | export_macro }} const char* IDynamicString_GetValue(IDynamicString_Handle handle);
+{{ namespace | export_macro }} size_t IDynamicString_GetLength(IDynamicString_Handle handle);
+{{ namespace | export_macro }} void IDynamicString_SetValue(IDynamicString_Handle handle, const char* value);
 
 // Error handling
 {{ namespace | export_macro }} const char* {{ namespace.name }}_GetLastError();

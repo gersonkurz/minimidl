@@ -52,7 +52,7 @@ static void test_{{ interface.name }}() {
     
     {% for property in interface.properties %}
     // Test property: {{ property.name }}
-    {% if property.type | is_primitive %}
+    {% if property.type | is_primitive or property.type | is_enum %}
     {
         {{ property.type | c_type }} value = {{ interface.name | c_function_name(property.name, "Get") }}(obj);
         printf("{{ property.name }} initial value: ");
@@ -81,15 +81,27 @@ static void test_{{ interface.name }}() {
     }
     {% elif property.type | is_string %}
     {
-        const char* value = {{ interface.name | c_function_name(property.name, "Get") }}(obj);
+        IDynamicString_Handle str_handle = {{ interface.name | c_function_name(property.name, "Get") }}(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("{{ property.name }} initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
         {% if property.writable %}
         // Test setter
         const char* test_string = "Test String";
-        {{ interface.name | c_function_name(property.name, "Set") }}(obj, test_string);
-        const char* new_value = {{ interface.name | c_function_name(property.name, "Get") }}(obj);
+        IDynamicString_Handle test_str = IDynamicString_Create(test_string);
+        {{ interface.name | c_function_name(property.name, "Set") }}(obj, test_str);
+        
+        IDynamicString_Handle new_str = {{ interface.name | c_function_name(property.name, "Get") }}(obj);
+        const char* new_value = new_str ? IDynamicString_GetValue(new_str) : NULL;
         TEST_ASSERT(new_value && strcmp(new_value, test_string) == 0, "{{ property.name }} setter should update string");
+        
+        if (new_str) {
+            IDynamicString_Release(new_str);
+        }
+        IDynamicString_Release(test_str);
         {% endif %}
     }
     {% elif property.type | is_array %}
@@ -98,10 +110,15 @@ static void test_{{ interface.name }}() {
         printf("{{ property.name }} array count: %zu\n", count);
         
         for (size_t i = 0; i < count && i < 5; i++) {
-            {{ property.type.element_type | c_type }} item = {{ interface.name | c_function_name(property.name + "_Item", "Get") }}(obj, i);
             {% if property.type.element_type | is_string %}
-            printf("  [%zu]: %s\n", i, item ? item : "(null)");
+            IDynamicString_Handle item = {{ interface.name | c_function_name(property.name + "_Item", "Get") }}(obj, i);
+            const char* item_str = item ? IDynamicString_GetValue(item) : NULL;
+            printf("  [%zu]: %s\n", i, item_str ? item_str : "(null)");
+            if (item) {
+                IDynamicString_Release(item);
+            }
             {% else %}
+            {{ property.type.element_type | c_type }} item = {{ interface.name | c_function_name(property.name + "_Item", "Get") }}(obj, i);
             printf("  [%zu]: (value)\n", i);
             {% endif %}
         }

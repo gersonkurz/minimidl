@@ -60,51 +60,101 @@ static void test_ITask() {
     
     // Test property: id
     {
-        const char* value = ITask_Getid(obj);
+        IDynamicString_Handle str_handle = ITask_Getid(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("id initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
     }
     
     // Test property: title
     {
-        const char* value = ITask_Gettitle(obj);
+        IDynamicString_Handle str_handle = ITask_Gettitle(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("title initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
     }
     
     // Test property: created_at
     {
-        const char* value = ITask_Getcreated_at(obj);
+        IDynamicString_Handle str_handle = ITask_Getcreated_at(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("created_at initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
     }
     
     // Test property: description
     {
-        const char* value = ITask_Getdescription(obj);
+        IDynamicString_Handle str_handle = ITask_Getdescription(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("description initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
         // Test setter
         const char* test_string = "Test String";
-        ITask_Setdescription(obj, test_string);
-        const char* new_value = ITask_Getdescription(obj);
+        IDynamicString_Handle test_str = IDynamicString_Create(test_string);
+        ITask_Setdescription(obj, test_str);
+        
+        IDynamicString_Handle new_str = ITask_Getdescription(obj);
+        const char* new_value = new_str ? IDynamicString_GetValue(new_str) : NULL;
         TEST_ASSERT(new_value && strcmp(new_value, test_string) == 0, "description setter should update string");
+        
+        if (new_str) {
+            IDynamicString_Release(new_str);
+        }
+        IDynamicString_Release(test_str);
     }
     
     // Test property: priority
+    {
+        Priority value = ITask_Getpriority(obj);
+        printf("priority initial value: ");
+        printf("(unknown type)\n");
+        
+        // Test setter
+    }
     
     // Test property: status
+    {
+        Status value = ITask_Getstatus(obj);
+        printf("status initial value: ");
+        printf("(unknown type)\n");
+        
+        // Test setter
+    }
     
     // Test property: due_date
     {
-        const char* value = ITask_Getdue_date(obj);
+        IDynamicString_Handle str_handle = ITask_Getdue_date(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("due_date initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
         // Test setter
         const char* test_string = "Test String";
-        ITask_Setdue_date(obj, test_string);
-        const char* new_value = ITask_Getdue_date(obj);
+        IDynamicString_Handle test_str = IDynamicString_Create(test_string);
+        ITask_Setdue_date(obj, test_str);
+        
+        IDynamicString_Handle new_str = ITask_Getdue_date(obj);
+        const char* new_value = new_str ? IDynamicString_GetValue(new_str) : NULL;
         TEST_ASSERT(new_value && strcmp(new_value, test_string) == 0, "due_date setter should update string");
+        
+        if (new_str) {
+            IDynamicString_Release(new_str);
+        }
+        IDynamicString_Release(test_str);
     }
     
     // Test property: tags
@@ -113,8 +163,12 @@ static void test_ITask() {
         printf("tags array count: %zu\n", count);
         
         for (size_t i = 0; i < count && i < 5; i++) {
-            const char* item = ITask_Gettags_Item(obj, i);
-            printf("  [%zu]: %s\n", i, item ? item : "(null)");
+            IDynamicString_Handle item = ITask_Gettags_Item(obj, i);
+            const char* item_str = item ? IDynamicString_GetValue(item) : NULL;
+            printf("  [%zu]: %s\n", i, item_str ? item_str : "(null)");
+            if (item) {
+                IDynamicString_Release(item);
+            }
         }
         
         // Test array modification
@@ -169,33 +223,61 @@ static void test_IProject() {
     
     // Test property: id
     {
-        const char* value = IProject_Getid(obj);
+        IDynamicString_Handle str_handle = IProject_Getid(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("id initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
     }
     
     // Test property: name
     {
-        const char* value = IProject_Getname(obj);
+        IDynamicString_Handle str_handle = IProject_Getname(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("name initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
         // Test setter
         const char* test_string = "Test String";
-        IProject_Setname(obj, test_string);
-        const char* new_value = IProject_Getname(obj);
+        IDynamicString_Handle test_str = IDynamicString_Create(test_string);
+        IProject_Setname(obj, test_str);
+        
+        IDynamicString_Handle new_str = IProject_Getname(obj);
+        const char* new_value = new_str ? IDynamicString_GetValue(new_str) : NULL;
         TEST_ASSERT(new_value && strcmp(new_value, test_string) == 0, "name setter should update string");
+        
+        if (new_str) {
+            IDynamicString_Release(new_str);
+        }
+        IDynamicString_Release(test_str);
     }
     
     // Test property: description
     {
-        const char* value = IProject_Getdescription(obj);
+        IDynamicString_Handle str_handle = IProject_Getdescription(obj);
+        const char* value = str_handle ? IDynamicString_GetValue(str_handle) : NULL;
         printf("description initial value: %s\n", value ? value : "(null)");
+        if (str_handle) {
+            IDynamicString_Release(str_handle);
+        }
         
         // Test setter
         const char* test_string = "Test String";
-        IProject_Setdescription(obj, test_string);
-        const char* new_value = IProject_Getdescription(obj);
+        IDynamicString_Handle test_str = IDynamicString_Create(test_string);
+        IProject_Setdescription(obj, test_str);
+        
+        IDynamicString_Handle new_str = IProject_Getdescription(obj);
+        const char* new_value = new_str ? IDynamicString_GetValue(new_str) : NULL;
         TEST_ASSERT(new_value && strcmp(new_value, test_string) == 0, "description setter should update string");
+        
+        if (new_str) {
+            IDynamicString_Release(new_str);
+        }
+        IDynamicString_Release(test_str);
     }
     
     // Test property: active

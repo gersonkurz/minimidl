@@ -31,6 +31,9 @@ typedef enum {
     TASKMANAGER_ERROR_NOT_IMPLEMENTED = -5,
 } TaskManager_ErrorCode;
 
+// Core handles
+typedef void* IDynamicString_Handle;
+
 // Forward declarations
 typedef void* ITask_Handle;
 typedef void* IProject_Handle;
@@ -61,17 +64,17 @@ TASKMANAGER_API void ITask_Release(ITask_Handle handle);
 TASKMANAGER_API void ITask_AddRef(ITask_Handle handle);
 
 // Property: id
-TASKMANAGER_API const char* ITask_Getid(ITask_Handle handle);
+TASKMANAGER_API IDynamicString_Handle ITask_Getid(ITask_Handle handle);
 
 // Property: title
-TASKMANAGER_API const char* ITask_Gettitle(ITask_Handle handle);
+TASKMANAGER_API IDynamicString_Handle ITask_Gettitle(ITask_Handle handle);
 
 // Property: created_at
-TASKMANAGER_API const char* ITask_Getcreated_at(ITask_Handle handle);
+TASKMANAGER_API IDynamicString_Handle ITask_Getcreated_at(ITask_Handle handle);
 
 // Property: description
-TASKMANAGER_API const char* ITask_Getdescription(ITask_Handle handle);
-TASKMANAGER_API void ITask_Setdescription(ITask_Handle handle, const char* value);
+TASKMANAGER_API IDynamicString_Handle ITask_Getdescription(ITask_Handle handle);
+TASKMANAGER_API void ITask_Setdescription(ITask_Handle handle, IDynamicString_Handle value);
 
 // Property: priority
 TASKMANAGER_API Priority ITask_Getpriority(ITask_Handle handle);
@@ -82,14 +85,14 @@ TASKMANAGER_API Status ITask_Getstatus(ITask_Handle handle);
 TASKMANAGER_API void ITask_Setstatus(ITask_Handle handle, Status value);
 
 // Property: due_date
-TASKMANAGER_API const char* ITask_Getdue_date(ITask_Handle handle);
-TASKMANAGER_API void ITask_Setdue_date(ITask_Handle handle, const char* value);
+TASKMANAGER_API IDynamicString_Handle ITask_Getdue_date(ITask_Handle handle);
+TASKMANAGER_API void ITask_Setdue_date(ITask_Handle handle, IDynamicString_Handle value);
 
 // Property: tags
 TASKMANAGER_API size_t ITask_Gettags_Count(ITask_Handle handle);
-TASKMANAGER_API const char* ITask_Gettags_Item(ITask_Handle handle, size_t index);
+TASKMANAGER_API IDynamicString_Handle ITask_Gettags_Item(ITask_Handle handle, size_t index);
 TASKMANAGER_API void ITask_Settags_Clear(ITask_Handle handle);
-TASKMANAGER_API void ITask_Settags_Add(ITask_Handle handle, const char* value);
+TASKMANAGER_API void ITask_Settags_Add(ITask_Handle handle, IDynamicString_Handle value);
 
 // Method: Complete
 TASKMANAGER_API void ITask_Complete(
@@ -109,7 +112,7 @@ TASKMANAGER_API TaskManagerDict_Handle ITask_GetMetadata(
 
 // Method: SetMetadata
 TASKMANAGER_API void ITask_SetMetadata(
-    ITask_Handle handle, const char* key, const char* value);
+    ITask_Handle handle, IDynamicString_Handle key, IDynamicString_Handle value);
 
 // IProject interface
 TASKMANAGER_API IProject_Handle IProject_Create();
@@ -117,15 +120,15 @@ TASKMANAGER_API void IProject_Release(IProject_Handle handle);
 TASKMANAGER_API void IProject_AddRef(IProject_Handle handle);
 
 // Property: id
-TASKMANAGER_API const char* IProject_Getid(IProject_Handle handle);
+TASKMANAGER_API IDynamicString_Handle IProject_Getid(IProject_Handle handle);
 
 // Property: name
-TASKMANAGER_API const char* IProject_Getname(IProject_Handle handle);
-TASKMANAGER_API void IProject_Setname(IProject_Handle handle, const char* value);
+TASKMANAGER_API IDynamicString_Handle IProject_Getname(IProject_Handle handle);
+TASKMANAGER_API void IProject_Setname(IProject_Handle handle, IDynamicString_Handle value);
 
 // Property: description
-TASKMANAGER_API const char* IProject_Getdescription(IProject_Handle handle);
-TASKMANAGER_API void IProject_Setdescription(IProject_Handle handle, const char* value);
+TASKMANAGER_API IDynamicString_Handle IProject_Getdescription(IProject_Handle handle);
+TASKMANAGER_API void IProject_Setdescription(IProject_Handle handle, IDynamicString_Handle value);
 
 // Property: active
 TASKMANAGER_API bool IProject_Getactive(IProject_Handle handle);
@@ -133,11 +136,11 @@ TASKMANAGER_API void IProject_Setactive(IProject_Handle handle, bool value);
 
 // Method: CreateTask
 TASKMANAGER_API ITask_Handle IProject_CreateTask(
-    IProject_Handle handle, const char* title, const char* description);
+    IProject_Handle handle, IDynamicString_Handle title, IDynamicString_Handle description);
 
 // Method: GetTask
 TASKMANAGER_API ITask_Handle IProject_GetTask(
-    IProject_Handle handle, const char* taskId);
+    IProject_Handle handle, IDynamicString_Handle taskId);
 
 // Method: GetTasks
 TASKMANAGER_API TaskManagerArray_Handle IProject_GetTasks(
@@ -149,7 +152,7 @@ TASKMANAGER_API TaskManagerArray_Handle IProject_GetTasksByStatus(
 
 // Method: DeleteTask
 TASKMANAGER_API bool IProject_DeleteTask(
-    IProject_Handle handle, const char* taskId);
+    IProject_Handle handle, IDynamicString_Handle taskId);
 
 // Method: GetTaskCount
 TASKMANAGER_API int32_t IProject_GetTaskCount(
@@ -170,11 +173,11 @@ TASKMANAGER_API void ITaskManager_AddRef(ITaskManager_Handle handle);
 
 // Method: CreateProject
 TASKMANAGER_API IProject_Handle ITaskManager_CreateProject(
-    ITaskManager_Handle handle, const char* name);
+    ITaskManager_Handle handle, IDynamicString_Handle name);
 
 // Method: GetProject
 TASKMANAGER_API IProject_Handle ITaskManager_GetProject(
-    ITaskManager_Handle handle, const char* projectId);
+    ITaskManager_Handle handle, IDynamicString_Handle projectId);
 
 // Method: GetProjects
 TASKMANAGER_API TaskManagerArray_Handle ITaskManager_GetProjects(
@@ -186,11 +189,11 @@ TASKMANAGER_API TaskManagerArray_Handle ITaskManager_GetActiveProjects(
 
 // Method: DeleteProject
 TASKMANAGER_API bool ITaskManager_DeleteProject(
-    ITaskManager_Handle handle, const char* projectId);
+    ITaskManager_Handle handle, IDynamicString_Handle projectId);
 
 // Method: SearchTasks
 TASKMANAGER_API TaskManagerArray_Handle ITaskManager_SearchTasks(
-    ITaskManager_Handle handle, const char* query);
+    ITaskManager_Handle handle, IDynamicString_Handle query);
 
 // Method: GetTasksByPriority
 TASKMANAGER_API TaskManagerArray_Handle ITaskManager_GetTasksByPriority(
@@ -210,11 +213,11 @@ TASKMANAGER_API void ITaskManager_UpdateSettings(
 
 // Method: Save
 TASKMANAGER_API void ITaskManager_Save(
-    ITaskManager_Handle handle, const char* path);
+    ITaskManager_Handle handle, IDynamicString_Handle path);
 
 // Method: Load
 TASKMANAGER_API void ITaskManager_Load(
-    ITaskManager_Handle handle, const char* path);
+    ITaskManager_Handle handle, IDynamicString_Handle path);
 
 // Collection iteration helpers
 TASKMANAGER_API void TaskManagerArray_Release(TaskManagerArray_Handle handle);
@@ -229,6 +232,14 @@ TASKMANAGER_API void TaskManagerSet_Release(TaskManagerSet_Handle handle);
 TASKMANAGER_API size_t TaskManagerSet_Count(TaskManagerSet_Handle handle);
 TASKMANAGER_API bool TaskManagerSet_Next(TaskManagerSet_Handle handle, void** value);
 TASKMANAGER_API void TaskManagerSet_Reset(TaskManagerSet_Handle handle);
+
+// IDynamicString interface
+TASKMANAGER_API IDynamicString_Handle IDynamicString_Create(const char* value);
+TASKMANAGER_API void IDynamicString_AddRef(IDynamicString_Handle handle);
+TASKMANAGER_API void IDynamicString_Release(IDynamicString_Handle handle);
+TASKMANAGER_API const char* IDynamicString_GetValue(IDynamicString_Handle handle);
+TASKMANAGER_API size_t IDynamicString_GetLength(IDynamicString_Handle handle);
+TASKMANAGER_API void IDynamicString_SetValue(IDynamicString_Handle handle, const char* value);
 
 // Error handling
 TASKMANAGER_API const char* TaskManager_GetLastError();

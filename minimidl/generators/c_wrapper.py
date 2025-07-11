@@ -77,7 +77,7 @@ class CWrapperGenerator(BaseGenerator):
                 "int64_t": "int64_t",
                 "float": "float",
                 "double": "double",
-                "string_t": "const char*",
+                "string_t": "IDynamicString_Handle",
             }
             return type_map.get(type_spec.name, type_spec.name)
 
