@@ -2,7 +2,7 @@
 // DO NOT EDIT - This file was automatically generated
 
 #include "{{ namespace.name.lower() }}_wrapper.h"
-#include "{{ namespace.name.lower() }}.hpp"
+#include "{{ namespace.name }}.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -79,7 +79,7 @@ void {{ interface.name }}_AddRef({{ interface.name }}_Handle handle) {
 
 {% for property in interface.properties %}
 // Property: {{ property.name }}
-{% if property.type | is_primitive %}
+{% if property.type | is_primitive or property.type | is_enum %}
 {{ property.type | c_type }} {{ interface.name | c_function_name(property.name, "Get") }}({{ interface.name }}_Handle handle) {
     if (!handle) {
         SetError("Null handle");
@@ -87,7 +87,11 @@ void {{ interface.name }}_AddRef({{ interface.name }}_Handle handle) {
     }
     try {
         auto* obj = HandleToPtr<{{ namespace.name }}::{{ interface.name }}>(handle);
+        {% if property.type | is_enum %}
+        return static_cast<{{ property.type | c_type }}>(obj->get_{{ property.name }}());
+        {% else %}
         return obj->get_{{ property.name }}();
+        {% endif %}
     } catch (const std::exception& e) {
         SetError(e.what());
         return {};
@@ -150,7 +154,7 @@ size_t {{ interface.name | c_function_name(property.name + "_Count", "Get") }}({
         return {};
     }
 }
-{% else %}
+{% elif property.type | is_interface %}
 {{ property.type | c_type }} {{ interface.name | c_function_name(property.name, "Get") }}({{ interface.name }}_Handle handle) {
     if (!handle) {
         SetError("Null handle");
@@ -159,17 +163,22 @@ size_t {{ interface.name | c_function_name(property.name + "_Count", "Get") }}({
     try {
         auto* obj = HandleToPtr<{{ namespace.name }}::{{ interface.name }}>(handle);
         auto result = obj->get_{{ property.name }}();
-        {% if property.type | is_interface %}
         return PtrToHandle(result.get());
-        {% else %}
-        // Complex type - needs custom implementation
-        SetError("Complex type getter not implemented");
-        return nullptr;
-        {% endif %}
     } catch (const std::exception& e) {
         SetError(e.what());
         return nullptr;
     }
+}
+{% else %}
+// Complex type getter for {{ property.name }}
+{{ property.type | c_type }} {{ interface.name | c_function_name(property.name, "Get") }}({{ interface.name }}_Handle handle) {
+    if (!handle) {
+        SetError("Null handle");
+        return nullptr;
+    }
+    // TODO: Implement complex type getter
+    SetError("Complex type getter not implemented");
+    return nullptr;
 }
 {% endif %}
 
@@ -227,7 +236,9 @@ void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.n
     }
     try {
         auto* obj = HandleToPtr<{{ namespace.name }}::{{ interface.name }}>(handle);
-        {% if property.type | is_primitive %}
+        {% if property.type | is_enum %}
+        obj->set_{{ property.name }}(static_cast<{{ namespace.name }}::{{ property.type.name }}>(value));
+        {% elif property.type | is_primitive %}
         obj->set_{{ property.name }}(value);
         {% elif property.type | is_interface %}
         auto* valueObj = HandleToPtr<{{ namespace.name }}::{{ property.type.name }}>(value);
@@ -269,7 +280,11 @@ void {{ interface.name | c_function_name(property.name, "Set") }}({{ interface.n
         {% endif %}
             {%- for param in method.parameters -%}
             {%- if not loop.first %}, {% endif -%}
+            {%- if param.type | is_enum -%}
+            static_cast<{{ namespace.name }}::{{ param.type.name }}>({{ param.name }})
+            {%- else -%}
             {{ param.name }}
+            {%- endif -%}
             {%- endfor -%}
         );
         {% if method.return_type.name != "void" %}

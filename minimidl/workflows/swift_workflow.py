@@ -53,8 +53,10 @@ class SwiftWorkflow:
         c_wrapper_dir = project_dir / "CWrapper"
         c_wrapper_dir.mkdir(exist_ok=True)
 
-        c_impl_dir = project_dir / "CImplementation"
-        c_impl_dir.mkdir(exist_ok=True)
+        # Only create CImplementation dir if we're generating C++ stubs
+        if self.config.get("include_cpp_stubs", False):
+            c_impl_dir = project_dir / "CImplementation"
+            c_impl_dir.mkdir(exist_ok=True)
 
         # Generate C wrapper first
         logger.info("Generating C wrapper...")

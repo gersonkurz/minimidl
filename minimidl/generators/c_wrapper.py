@@ -54,6 +54,7 @@ class CWrapperGenerator(BaseGenerator):
             "is_array": self.is_array,
             "is_dict": self.is_dict,
             "is_set": self.is_set,
+            "is_enum": self.is_enum,
             "is_interface": self.is_interface,
             "export_macro": self.export_macro,
             "render_expression": self.render_expression,
@@ -205,6 +206,15 @@ class CWrapperGenerator(BaseGenerator):
         if isinstance(type_spec, NullableType):
             return self.is_set(type_spec.inner_type)
         return isinstance(type_spec, SetType)
+    
+    def is_enum(self, type_spec: Type) -> bool:
+        """Check if type is an enum."""
+        if isinstance(type_spec, NullableType):
+            return self.is_enum(type_spec.inner_type)
+        if isinstance(type_spec, TypeRef):
+            # Check if this type name is in our enum names set
+            return type_spec.name in self.enum_names
+        return False
 
     def is_interface(self, type_spec: Type) -> bool:
         """Check if type is an interface reference."""

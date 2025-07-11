@@ -34,6 +34,11 @@ add_executable(test_main tests/test_main.cpp)
 target_link_libraries(test_main PRIVATE ${PROJECT_NAME}_interface)
 add_test(NAME test_main COMMAND test_main)
 
+# Add C wrapper if it exists
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CWrapper/CMakeLists.txt")
+    add_subdirectory(CWrapper)
+endif()
+
 # Installation rules
 install(FILES ${HEADERS} DESTINATION include)
 install(TARGETS ${PROJECT_NAME}_interface

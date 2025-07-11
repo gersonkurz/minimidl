@@ -29,7 +29,6 @@ endif()
 set(WRAPPER_SOURCES
     {{ namespace.name.lower() }}_wrapper.cpp
     {{ namespace.name.lower() }}_wrapper.h
-    {{ namespace.name.lower() }}.hpp
 )
 
 # Create shared library
@@ -42,6 +41,7 @@ target_compile_definitions({{ namespace.name.lower() }}_wrapper PRIVATE {{ names
 target_include_directories({{ namespace.name.lower() }}_wrapper
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         $<INSTALL_INTERFACE:include>
 )
 
@@ -89,26 +89,10 @@ install(EXPORT {{ namespace.name }}Targets
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/{{ namespace.name }}
 )
 
-# Create package config file
-include(CMakePackageConfigHelpers)
-
-configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/{{ namespace.name }}Config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/{{ namespace.name }}Config.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/{{ namespace.name }}
-)
-
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/{{ namespace.name }}ConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-)
-
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/{{ namespace.name }}Config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/{{ namespace.name }}ConfigVersion.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/{{ namespace.name }}
-)
+# Optional: Export for find_package support
+# To enable package export, create a Config.cmake.in file and uncomment below:
+# include(CMakePackageConfigHelpers)
+# configure_package_config_file(...)
 
 # Enable testing
 enable_testing()
